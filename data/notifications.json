@@ -1,0 +1,24 @@
+[
+    {
+        "id": 1,
+        "docNo": "DVX-2026-DPWH-RFA-AR-020",
+        "project": "Government Center",
+        "status": "Revise & Resubmit",
+        "assignedTo": "Engr. Santos",
+        "returnedBy": "Consultant",
+        "date": "2026-07-25",
+        "comments": "Revise door schedule and update details.",
+        "read": false
+    },
+    {
+        "id": 2,
+        "docNo": "DVX-2026-DPWH-MAR-018",
+        "project": "Medical Center",
+        "status": "Approved As Corrected",
+        "assignedTo": "Engr. Cruz",
+        "returnedBy": "Consultant",
+        "date": "2026-07-26",
+        "comments": "Correct title block and keynote numbering.",
+        "read": false
+    }
+]

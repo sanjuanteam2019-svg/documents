@@ -1,0 +1,42 @@
+[
+  {
+    "docNo":"GCSJ-CVI-001",
+    "category":"CVI",
+    "trade":"N/A",
+    "title":"Shop Drawing of Bidet",
+    "revision":"00",
+    "status":"Approved",
+    "date":"2026-07-06",
+    "link":"https://drive.google.com/file/d/1W29J7yLhJYV7VrT-h2Hrz4rXyO3gVKUh/view?usp=sharing"
+  },
+  {
+    "docNo":"DVX-2026-GCSJ-DPWH-RFA-AR-123 R2",
+    "category":"RFA",
+    "trade":"Architectural",
+    "title":"Comelec Countertop Detailed Drawings",
+    "revision":"02",
+    "status":"Approved",
+    "date":"2026-06-30",
+    "link":"https://drive.google.com/file/d/1_JLCOSklCHg9e8rCZbSLiL-0ZdNB03ZZ/view?usp=sharing"
+  },
+  {
+    "docNo":"DVX-2026-GCSJ-DPWH-RFA-AR-123 R1",
+    "category":"RFA",
+    "trade":"Architectural",
+    "title":"Comelec Countertop Detailed Drawings",
+    "revision":"01",
+    "status":"Superseded",
+    "date":"2026-06-03",
+    "link":"https://drive.google.com/file/d/1WarztsdrHh5wEWIjIeLcojhvnA_ohwxZ/view?usp=sharing"
+  },
+  {
+    "docNo":"DVX-GC-SD-010",
+    "category":"Safety",
+    "trade":"Safety",
+    "title":"Fire Extinguisher Inspection",
+    "revision":"00",
+    "status":"Draft",
+    "date":"2026-07-10",
+    "link":"#"
+  }
+]

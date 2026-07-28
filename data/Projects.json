@@ -1,0 +1,16 @@
+[
+  {
+    "id":"government-center",
+    "name":"Government Center Project",
+    "client":"City Government of San Juan",
+    "projectNo":"GC-001",
+    "logo":"images/govcenter.png"
+  },
+  {
+    "id":"multipurpose-building",
+    "name":"22-Storey Multipurpose Building",
+    "client":"DPWH",
+    "projectNo":"MPB-001",
+    "logo":"images/mpb.png"
+  }
+]

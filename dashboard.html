@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Dashboard</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Segoe UI,Arial,sans-serif;
+}
+
+body{
+display:flex;
+background:#edf2f7;
+}
+
+/* Sidebar */
+
+.sidebar{
+
+width:240px;
+height:100vh;
+background:#0f172a;
+color:white;
+padding:20px;
+
+}
+
+.sidebar h2{
+
+margin-bottom:40px;
+text-align:center;
+font-size:22px;
+
+}
+
+.sidebar ul{
+
+list-style:none;
+
+}
+
+.sidebar li{
+
+padding:15px;
+margin-bottom:10px;
+cursor:pointer;
+border-radius:8px;
+
+}
+
+.sidebar li:hover{
+
+background:#1e293b;
+
+}
+
+/* Main */
+
+.main{
+
+flex:1;
+padding:30px;
+
+}
+
+/* Header */
+
+.header{
+
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:30px;
+
+}
+
+.header h1{
+
+color:#0f172a;
+
+}
+
+/* Cards */
+
+.cards{
+
+display:grid;
+
+grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+
+gap:20px;
+
+}
+
+.card{
+
+background:white;
+
+padding:25px;
+
+border-radius:12px;
+
+box-shadow:0 5px 15px rgba(0,0,0,.08);
+
+}
+
+.card h2{
+
+font-size:40px;
+
+color:#2563eb;
+
+margin-bottom:10px;
+
+}
+
+.card p{
+
+color:#555;
+
+}
+
+/* Search */
+
+.search{
+
+margin-top:35px;
+
+margin-bottom:30px;
+
+}
+
+.search input{
+
+width:100%;
+
+padding:14px;
+
+font-size:16px;
+
+border-radius:8px;
+
+border:1px solid #ccc;
+
+}
+
+/* Table */
+
+table{
+
+width:100%;
+
+background:white;
+
+border-collapse:collapse;
+
+border-radius:12px;
+
+overflow:hidden;
+
+box-shadow:0 5px 15px rgba(0,0,0,.08);
+
+}
+
+th{
+
+background:#2563eb;
+
+color:white;
+
+padding:15px;
+
+}
+
+td{
+
+padding:15px;
+
+border-bottom:1px solid #ddd;
+
+}
+
+tr:hover{
+
+background:#f3f6fb;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="sidebar">
+
+<img src="images/logo.png" alt="DEVEX" class="logo">
+
+<ul>
+
+<li>🏠 Dashboard</li>
+
+<li><a href="projects.html" style="color:white;text-decoration:none;">📁 Projects</a></li>
+
+<li>📄 Documents</li>
+
+<li>📊 Reports</li>
+
+<li>⚙ Settings</li>
+
+</ul>
+
+</div>
+
+<div class="main">
+
+<div class="header">
+
+<h1>Document Control Dashboard</h1>
+
+<h3>Welcome John</h3>
+
+</div>
+
+<div class="cards">
+
+<div class="card">
+    <h2 id="totalDocuments">0</h2>
+    <p>📁 Total Documents</p>
+</div>
+
+<div class="card">
+    <h2 id="submitted">0</h2>
+    <p>Total Submitted</p>
+</div>
+
+<div class="card">
+    <h2 id="approved">0</h2>
+    <p>Approved</p>
+</div>
+
+<div class="card">
+    <h2 id="approvedAsCorrected">0</h2>
+    <p>Approved As Corrected</p>
+</div>
+
+<div class="card">
+    <h2 id="reviseResubmit">0</h2>
+    <p>Revise &amp; Resubmit</p>
+</div>
+
+<div class="card">
+    <h2 id="draft">0</h2>
+    <p>Draft</p>
+</div>
+
+<div class="card">
+    <h2 id="dueThisWeek">0</h2>
+    <p>Due This Week</p>
+</div>
+
+<div class="card">
+    <h2 id="overdue">0</h2>
+    <p>Overdue</p>
+</div>
+
+<div class="card">
+    <h2 id="totalProjects">0</h2>
+    <p>Total Projects</p>
+</div>
+
+<div class="card">
+    <h2 id="superseded">0</h2>
+    <p>Superseded</p>
+</div>
+
+<div class="card">
+    <h2 id="cancelled">0</h2>
+    <p>Cancelled</p>
+</div>    
+
+</div>
+
+<div class="search">
+
+<input type="text" placeholder="Search document number...">
+
+</div>
+
+<table>
+
+<thead>
+<tr>
+    <th>Document No.</th>
+    <th>Project</th>
+    <th>Title</th>
+    <th>Status</th>
+    <th>Date</th>
+
+</tr>
+</thead>
+
+<tbody id="dashboardTable">
+</tbody>    
+
+</table>
+
+</div>
+
+<script src="js/dashboard.js"></script>
+
+</body>
+</html>    

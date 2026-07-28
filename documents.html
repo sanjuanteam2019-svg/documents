@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Document Register</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+<div class="chart-card">
+
+    <h3>Document Status Overview</h3>
+
+    <canvas id="statusChart"></canvas>
+
+</div>
+
+<header>
+    <h2 id="projectTitle">📄 projectNames</h2>
+
+    <a href="projects.html">⬅ Back to Projects</a>
+</header>
+
+<div class="dashboard">
+
+    <div class="card">
+        <h3>Total Documents</h3>
+        <h1 id="totalDocs">0</h1>
+    </div>
+
+    <div class="card approved">
+        <h3>Approved</h3>
+        <h1 id="approvedDocs">0</h1>
+    </div>
+
+    <div class="card approved-as-corrected">
+        <h3>Approved As Corrected</h3>
+        <h1 id="approvedAsCorrectedDocs">0</h1>
+    </div>
+
+    <div class="card reviseResubmit">
+        <h3>Revise & Resubmit</h3>
+        <h1 id="reviseResubmitDocs">0</h1>
+    </div>
+    
+    <div class="card submitted">
+        <h3>Submitted</h3>
+        <h1 id="submittedDocs">0</h1>
+    </div>
+
+    <div class="card draft">
+        <h3>Draft</h3>
+        <h1 id="draftDocs">0</h1>
+    </div>
+
+    <div class="card cancelled">
+        <h3>Cancelled</h3>
+        <h1 id="cancelledDocs">0</h1>
+    </div>
+
+    <div class="card superseded">
+        <h3>Superseded</h3>
+        <h1 id="supersededDocs">0</h1>
+    </div>
+
+    <div class="card overdue">
+    <h3>Overdue</h3>
+    <h1 id="overdueDocs">0</h1>
+</div>
+
+</div>
+
+<div class="container">
+
+    <div class="toolbar">
+
+        <input
+            type="text"
+            id="searchBox"
+            placeholder="Search documents...">
+
+        <select id="statusFilter">
+
+            <option value="">All Status</option>
+            <option value="Approved">Approved</option>
+            <option value="Approved As Corrected">Approved As Corrected</option>
+            <option value="Revise & Resubmit">Revise & Resubmit</option>
+            <option value="Submitted">Submitted</option>
+            <option value="Draft">Draft</option>
+            <option value="cancelled">Cancelled</option>
+            <option value="Superseded">Superseded</option>
+            <option value="Overdue">Overdue</option>
+
+        </select>
+
+        <select id="categoryFilter">
+
+    <option value="">All Categories</option>
+    <option value="RFA">RFA</option>
+    <option value="RFI">RFI</option>
+    <option value="MAR">MAR</option>
+    <option value="CVI">CVI</option>       
+    <option value="Safety">Safety</option>
+    <option value="Letter">Letter</option>
+         </select>
+
+         <select id="tradeFilter">
+    <option value="">All Trades</option>
+    <option value="Architectural">Architectural</option>
+    <option value="Civil">Civil</option>
+    <option value="Structural">Structural</option>
+    <option value="Electrical">Electrical</option>
+    <option value="Mechanical">Mechanical</option>
+    <option value="Plumbing">Plumbing</option>
+    <option value="Safety">Safety</option>
+</select>
+
+<select id="sortFilter">
+    <option value="">Sort By</option>
+    <option value="date-desc">Newest Date</option>
+    <option value="date-asc">Oldest Date</option>
+    <option value="doc-asc">Document No. (A-Z)</option>
+    <option value="doc-desc">Document No. (Z-A)</option>
+    <option value="title-asc">Title (A-Z)</option>
+    <option value="title-desc">Title (Z-A)</option>
+    
+</select>
+
+    </div>
+
+    <p id="recordCount"></p>
+
+    <div class="table-container">
+
+    <table id="docTable">
+
+        <thead>
+
+            <tr>
+                <th>Document No.</th>
+                <th>Category</th>
+                <th>Trade</th>
+                <th>Title</th>
+                <th>Revision</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>File</th>
+            </tr>
+
+        </thead>
+
+        <tbody id="tableBody">
+        </tbody>
+
+    </table>
+
+</div>
+
+<script>
+
+let documents = [];
+
+let statusChart;
+
+const params = new URLSearchParams(window.location.search);
+const project = params.get("project");
+
+if (!project) {
+
+    alert("No project selected.");
+
+    window.location.href = "projects.html";
+
+}
+const projectNames = {
+    "government-center": "Government Center Project",
+    "22-storey-multipurpose-building": "22-Storey Multipurpose Building",
+    "school-cluster3": "School Cluster 3",
+    "medical-center": "Medical Center",
+    "evacuation-center": "San Juan Evacuation Center",
+    "crematorium": "San Juan Crematorium"
+};
+document.getElementById("projectTitle").innerHTML =
+    "📄 " + (projectNames[project] || "Document Register");
+
+    fetch(`data/${project}.json`)
+.then(response => {
+
+    if (!response.ok) {
+
+        throw new Error("Project database not found.");
+
+    }
+
+    return response.json();
+
+})
+.then(data => {
+
+    documents = data;
+
+updateDashboard();
+
+function updateChart(){
+
+    const approved =
+        documents.filter(d=>d.status==="Approved").length;
+
+    const approvedAsCorrected =
+        documents.filter(d=>d.status==="Approved As Corrected").length;
+
+    const reviseResubmit =
+        documents.filter(d=>d.status==="Revise & Resubmit").length;
+
+    const submitted =
+        documents.filter(d=>d.status==="Submitted").length;
+
+    const draft =
+        documents.filter(d=>d.status==="Draft").length;
+
+    const cancelled =
+        documents.filter(d=>d.status==="Cancelled").length;
+
+    const superseded =
+        documents.filter(d=>d.status==="Superseded").length;
+
+    const overdue =
+    documents.filter(doc =>doc.status==="Submitted" &&
+        doc.dueDate &&
+        new Date() > new Date(doc.dueDate)
+    ).length;
+
+    if(statusChart){
+
+        statusChart.destroy();
+
+    }
+
+    const ctx =
+        document.getElementById("statusChart");
+
+    statusChart = new Chart(ctx,{
+
+        type:"doughnut",
+
+        data:{
+
+            labels:[
+                "Approved",
+                "Approved As Corrected",
+                "Revise & Resubmit",
+                "Submitted",
+                "Draft",
+                "Superseded",
+                "Cancelled",
+                "Overdue"
+            ],
+
+            datasets:[{
+
+                data:[
+                    approved,
+                    approvedAsCorrected,
+                    reviseResubmit,
+                    submitted,
+                    draft,
+                    superseded,
+                    cancelled,
+                    overdue
+                ],
+
+                backgroundColor:[
+                    "#16a34a",
+                    "#FEBE1E",
+                    "#FE0000",
+                    "#765BFF",
+                    "#D2591C",
+                    "#D8E438",
+                    "#EDADAD",
+                    "#DC2626"
+                    
+                ],
+
+                borderWidth:1
+
+            }]
+
+        },
+
+        options:{
+
+            responsive:true,
+
+            plugins:{
+
+                legend:{
+
+                    position:"bottom"
+
+                }
+
+            }
+
+        }
+
+    });
+
+}
+
+displayDocuments(documents);
+
+function updateDashboard(){
+
+    document.getElementById("totalDocs").textContent =
+        documents.length;
+
+    document.getElementById("approvedDocs").textContent =
+        documents.filter(d => d.status === "Approved").length;
+
+    document.getElementById("approvedAsCorrectedDocs").textContent =
+        documents.filter(d => d.status === "Approved As Corrected").length;
+
+    document.getElementById("reviseResubmitDocs").textContent =
+        documents.filter(d => d.status === "Revise & Resubmit").length;
+
+    document.getElementById("submittedDocs").textContent =
+        documents.filter(d => d.status === "Submitted").length;
+
+    document.getElementById("draftDocs").textContent =
+        documents.filter(d => d.status === "Draft").length;
+
+    document.getElementById("cancelledDocs").textContent =
+        documents.filter(d => d.status === "Cancelled").length;
+    
+    document.getElementById("supersededDocs").textContent =    
+        documents.filter(d => d.status === "Superseded").length;
+
+    document.getElementById("overdueDocs").textContent =
+    documents.filter(doc => {
+
+        if (doc.status !== "Submitted") return false;
+
+        if (!doc.dueDate) return false;
+
+        return new Date() > new Date(doc.dueDate);
+
+    }).length;
+
+        updateChart();
+
+}
+
+})
+.catch(error => {
+
+    console.error(error);
+
+});
+
+function displayDocuments(list) {
+
+    const table = document.getElementById("tableBody");
+
+    table.innerHTML = "";
+
+    list.forEach(doc => {
+
+        let statusClass = "";
+
+        const isOverdue =
+            doc.status === "Submitted" &&
+            doc.dueDate &&
+            new Date() > new Date(doc.dueDate);
+
+        const displayStatus =
+            isOverdue ? "Overdue" : doc.status;
+
+        if (doc.status === "Approved")
+            statusClass = "status-approved";
+
+        if (doc.status === "Approved As Corrected")
+            statusClass = "status-approvedAsCorrected";
+
+        if (doc.status === "Revise & Resubmit")
+            statusClass = "status-reviseResubmit";
+
+        if (doc.status === "Submitted")
+            statusClass = "status-submitted";
+
+        if (isOverdue)
+            statusClass = "status-overdue";
+
+        if (doc.status === "Draft")
+            statusClass = "status-draft";
+
+        if (doc.status === "Cancelled")
+            statusClass = "status-cancelled";
+
+        if (doc.status === "Superseded")
+            statusClass = "status-superseded";
+
+        table.innerHTML += `
+            <tr>
+                <td>${doc.docNo}</td>
+                <td>${doc.category}</td>
+                <td>${doc.trade}</td>
+                <td>${doc.title}</td>
+                <td>${doc.revision}</td>
+                <td class="${statusClass}">
+                    ${displayStatus}
+                </td>
+                <td>${doc.date}</td>
+                <td>
+                    <a href="${doc.link}" target="_blank" class="view-btn">
+                        View
+                    </a>
+                </td>
+            </tr>
+        `;
+
+    });
+
+    document.getElementById("recordCount").innerHTML =
+        "Total Documents : <b>" + list.length + "</b>";
+
+}
+
+const search=document.getElementById("searchBox");
+
+const status=document.getElementById("statusFilter");
+
+const category = document.getElementById("categoryFilter");
+
+const trade = document.getElementById("tradeFilter");
+
+const sort = document.getElementById("sortFilter");
+
+function filterDocuments(){
+
+    const keyword = search.value.toLowerCase();
+
+    const selectedStatus = status.value;
+    const selectedCategory = category.value;
+    const selectedTrade = trade.value;
+
+    const filtered = documents.filter(doc => {
+
+        const matchText =
+            doc.docNo.toLowerCase().includes(keyword) ||
+            doc.title.toLowerCase().includes(keyword) ||
+            doc.category.toLowerCase().includes(keyword) ||
+            doc.trade.toLowerCase().includes(keyword);
+
+        const isOverdue =
+    doc.status === "Submitted" &&
+    doc.dueDate &&
+    new Date() > new Date(doc.dueDate);
+
+        const displayStatus =
+    isOverdue ? "Overdue" : doc.status;
+
+        const matchStatus =
+    selectedStatus === "" ||
+    (selectedStatus === "Overdue"
+        ? isOverdue
+        : doc.status === selectedStatus);
+
+        const matchCategory =
+            selectedCategory === "" ||
+            doc.category === selectedCategory;
+
+        const matchTrade =
+            selectedTrade === "" ||
+            doc.trade === selectedTrade;
+
+        return (
+            matchText &&
+            matchStatus &&
+            matchCategory &&
+            matchTrade
+  
+        );
+
+    });
+
+    switch(sort.value){
+
+        case "date-desc":
+            filtered.sort((a,b)=>new Date(b.date)-new Date(a.date));
+            break;
+
+        case "date-asc":
+            filtered.sort((a,b)=>new Date(a.date)-new Date(b.date));
+            break;
+
+        case "doc-asc":
+            filtered.sort((a,b)=>a.docNo.localeCompare(b.docNo));
+            break;
+
+        case "doc-desc":
+            filtered.sort((a,b)=>b.docNo.localeCompare(a.docNo));
+            break;
+
+        case "title-asc":
+            filtered.sort((a,b)=>a.title.localeCompare(b.title));
+            break;
+
+        case "title-desc":
+            filtered.sort((a,b)=>b.title.localeCompare(a.title));
+            break;
+
+    }
+
+    displayDocuments(filtered);
+
+}
+
+search.addEventListener("keyup",filterDocuments);
+
+status.addEventListener("change",filterDocuments);
+
+category.addEventListener("change", filterDocuments);
+
+trade.addEventListener("change", filterDocuments);
+
+sort.addEventListener("change", filterDocuments);
+
+</script>
+
+</body>

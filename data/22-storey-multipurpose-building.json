@@ -1,0 +1,72 @@
+[
+  {
+    "docNo":"DVX-2026-DPWH-MAR-AR-020 R2",
+    "category":"MAR",
+    "trade":"Architectural",
+    "title":"Bentonite",
+    "revision":"02",
+    "status":"Revise & Resubmit",
+    "date":"2026-07-21",
+    "link":"https://drive.google.com/file/d/1amhvTwS3NbE2iSCyc4lnU1h0oDmmrn7I/view?usp=sharing"
+  },
+  {
+    "docNo":"DVX-2025-MPSJ-DPWH-RFA-AR-048",
+    "category":"RFA",
+    "trade":"Architectural",
+    "title":"Mock up Unit Reflected Ceilling Plan (RCP)",
+    "revision":"00",
+    "status":"Revise & Resubmit",
+    "date":"2025-07-15",
+    "link":"https://drive.google.com/file/d/1beQUTKE9bSD6yi22EkB4QQZJYCDjjcxB/view?usp=sharing"
+  },
+  {
+    "docNo":"DVX-2025-MPSJ-DPWH-RFA-AR-047 R1",
+    "category":"RFA",
+    "trade":"Architectural",
+    "title":"Hallways and Fire Exit Steel Railing Plan and Details",
+    "revision":"01",
+    "status":"Approved As Corrected",
+    "date":"2025-04-07",
+    "link":"https://drive.google.com/file/d/16A-ikpS9mU4HsnzKVIQTLkaCt2_RXcdc/view?usp=sharing"
+  },
+  {
+    "docNo":"DVX-2025-MPSJ-DPWH-RFA-AR-046 R1",
+    "category":"RFA",
+    "trade":"Architectural",
+    "title":"Mock up unit precast carcass cabinet",
+    "revision":"01",
+    "status":"Approved As Corrected",
+    "date":"2025-03-20",
+    "link":"https://drive.google.com/file/d/17lsP__nOrTi1A4P3jfZbJOLsN9XQhR0E/view?usp=drive_link"
+  },
+  {
+    "docNo":"DVX-2025-MPSJ-DPWH-AR-046",
+    "category":"RFA",
+    "trade":"Architectural",
+    "title":"Mock up unit precast carcass cabinet",
+    "revision":"00",
+    "status":"Revise & Resubmit",
+    "date":"2025-03-15",
+    "link":"https://drive.google.com/file/d/1oJ23Bdm4eanIri8uzmSOl9Q14vemuXes/view?usp=sharing"
+  },
+  {
+    "docNo":"DVX-2025-MPSJ-DPWH-AR-045 R3",
+    "category":"RFA",
+    "trade":"Architectural",
+    "title":"Mock up unit pre-cast carcass cabinet",
+    "revision":"03",
+    "status":"Approved As Corrected",
+    "date":"2025-06-19",
+    "link":"https://drive.google.com/file/d/1u2QpmFRp7Y0QLTzPR45zaMRSWV_xEYlT/view?usp=sharing"
+  },
+  {
+    "docNo":"DVX-GC-SD-010",
+    "category":"Safety",
+    "trade":"Safety",
+    "title":"Fire Extinguisher Inspection",
+    "revision":"00",
+    "status":"Approved As Corrected",
+    "date":"2026-07-10",
+    "link":"#"
+  }
+]
