@@ -6,7 +6,7 @@
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0">
 
-    <title>Document Register</title>
+    <title>Billings</title>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -70,13 +70,8 @@
         <select id="categoryFilter">
 
     <option value="">All Categories</option>
-    <option value="RFA">RFA</option>
-    <option value="RFI">RFI</option>
-    <option value="MAR">MAR</option>
-    <option value="CVI">CVI</option>       
-    <option value="Safety">Safety</option>
-    <option value="Letter">Letter</option>
-    <option value="Billings">Billings</option>
+    <option value="Subcon">Subcon</option>
+    <option value="Utility">Utility</option>
          </select>
 
          <select id="billingFilter">
@@ -112,7 +107,6 @@
                 <th>Category</th>
                 <th>Trade</th>
                 <th>Title</th>
-                <th>Revision</th>
                 <th>Status</th>
                 <th>Date</th>
                 <th>File</th>
@@ -206,22 +200,6 @@ function updateChart(){
 
 function displayDocuments(list) {
 
-    const table = document.getElementById("tableBody");
-
-    table.innerHTML = "";
-
-    list.forEach(doc => {
-
-        let statusClass = "";
-
-        const isOverdue =
-            doc.status === "Submitted" &&
-            doc.dueDate &&
-            new Date() > new Date(doc.dueDate);
-
-        const displayStatus =
-            isOverdue ? "Overdue" : doc.status;
-
         if (doc.status === "Approved")
             statusClass = "status-approved";
 
@@ -281,7 +259,7 @@ const status=document.getElementById("statusFilter");
 
 const category = document.getElementById("categoryFilter");
 
-const trade = document.getElementById("tradeFilter");
+const trade = document.getElementById("billingFilter");
 
 const sort = document.getElementById("sortFilter");
 
@@ -300,20 +278,6 @@ function filterDocuments(){
             doc.title.toLowerCase().includes(keyword) ||
             doc.category.toLowerCase().includes(keyword) ||
             doc.trade.toLowerCase().includes(keyword);
-
-        const isOverdue =
-    doc.status === "Submitted" &&
-    doc.dueDate &&
-    new Date() > new Date(doc.dueDate);
-
-        const displayStatus =
-    isOverdue ? "Overdue" : doc.status;
-
-        const matchStatus =
-    selectedStatus === "" ||
-    (selectedStatus === "Overdue"
-        ? isOverdue
-        : doc.status === selectedStatus);
 
         const matchCategory =
             selectedCategory === "" ||
