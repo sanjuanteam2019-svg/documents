@@ -142,7 +142,7 @@ if (!project) {
 document.getElementById("projectTitle").innerHTML =
     "📄 " + (projectNames[project] || "Document Register");
 
-    fetch(`data/${project}.json`)
+    fetch(`data/${billings}.json`)
 .then(response => {
 
     if (!response.ok) {
