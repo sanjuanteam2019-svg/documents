@@ -113,13 +113,13 @@
     sort.addEventListener("change", filterDocuments);
 
     // Load data from billings.json
-    fetch(data/$"billings.json")
+    fetch(data/"billings.json")
       .then(response => response.json())
       .then(data => {
         documents = data;
         displayDocuments(documents);
       })
-      .catch(err => console.error("Error loading data/billings.json:", err));
+      .catch(err => console.error("Error loading billings.json:", err));
   </script>
 
 </body>
