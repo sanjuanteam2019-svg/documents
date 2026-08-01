@@ -61,6 +61,11 @@
         <h1 id="draftDocs">0</h1>
     </div>
 
+     <div class="card transmitted">
+        <h3>Transmitted</h3>
+        <h1 id="transmittedDocs">0</h1>
+    </div>
+
     <div class="card cancelled">
         <h3>Cancelled</h3>
         <h1 id="cancelledDocs">0</h1>
@@ -95,6 +100,7 @@
             <option value="Revise & Resubmit">Revise & Resubmit</option>
             <option value="Submitted">Submitted</option>
             <option value="Draft">Draft</option>
+            <option value="transmitted">Transmitted</option>
             <option value="cancelled">Cancelled</option>
             <option value="Superseded">Superseded</option>
             <option value="Overdue">Overdue</option>
@@ -110,6 +116,7 @@
     <option value="CVI">CVI</option>       
     <option value="Safety">Safety</option>
     <option value="Letter">Letter</option>
+    <option value="Billings">Billings</option>
          </select>
 
          <select id="tradeFilter">
@@ -121,6 +128,7 @@
     <option value="Mechanical">Mechanical</option>
     <option value="Plumbing">Plumbing</option>
     <option value="Safety">Safety</option>
+    <option value="Billings">Billings</option>         
 </select>
 
 <select id="sortFilter">
@@ -226,6 +234,9 @@ function updateChart(){
     const draft =
         documents.filter(d=>d.status==="Draft").length;
 
+    const transmitted =
+        documents.filter(d=>d.status==="Transmitted").length;
+
     const cancelled =
         documents.filter(d=>d.status==="Cancelled").length;
 
@@ -261,7 +272,8 @@ function updateChart(){
                 "Draft",
                 "Superseded",
                 "Cancelled",
-                "Overdue"
+                "Overdue",
+                "Transmitted"
             ],
 
             datasets:[{
@@ -274,7 +286,8 @@ function updateChart(){
                     draft,
                     superseded,
                     cancelled,
-                    overdue
+                    overdue,
+                    transmitted
                 ],
 
                 backgroundColor:[
@@ -285,7 +298,8 @@ function updateChart(){
                     "#D2591C",
                     "#D8E438",
                     "#EDADAD",
-                    "#DC2626"
+                    "#DC2626",
+                    "#241AE4"
                     
                 ],
 
@@ -336,6 +350,9 @@ function updateDashboard(){
 
     document.getElementById("draftDocs").textContent =
         documents.filter(d => d.status === "Draft").length;
+
+    document.getElementById("transmittedDocs").textContent =
+        documents.filter(d => d.status === "Transmitted").length;
 
     document.getElementById("cancelledDocs").textContent =
         documents.filter(d => d.status === "Cancelled").length;
@@ -391,6 +408,9 @@ function displayDocuments(list) {
 
         if (doc.status === "Revise & Resubmit")
             statusClass = "status-reviseResubmit";
+
+        if (doc.status === "Transmitted")
+            statusClass = "status-transmitted";
 
         if (doc.status === "Submitted")
             statusClass = "status-submitted";
