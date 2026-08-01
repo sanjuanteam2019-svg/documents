@@ -46,11 +46,7 @@
   <div id="document-list"></div>
 
   <script>
-    const documents = [
-      { docNo: "INV001", title: "Website Design", date: "2026-07-15", status: "paid", category: "invoice", trade: "domestic" },
-      { docNo: "REC002", title: "Hosting Fee", date: "2026-07-20", status: "unpaid", category: "receipt", trade: "international" },
-      { docNo: "INV003", title: "Consulting", date: "2026-07-10", status: "paid", category: "invoice", trade: "domestic" }
-    ];
+    let documents = [];
 
     const search = document.getElementById("search");
     const status = document.getElementById("status");
@@ -116,8 +112,14 @@
     trade.addEventListener("change", filterDocuments);
     sort.addEventListener("change", filterDocuments);
 
-    // Initial render
-    displayDocuments(documents);
+    // Load data from billings.json
+    fetch(data/"billings.json")
+      .then(response => response.json())
+      .then(data => {
+        documents = data;
+        displayDocuments(documents);
+      })
+      .catch(err => console.error("Error loading data/billings.json:", err));
   </script>
 
 </body>
