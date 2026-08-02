@@ -19,19 +19,18 @@
     <input type="text" id="search" placeholder="Search by title...">
     <select id="status">
       <option value="">All Status</option>
-      <option value="evaluated">Evaluated</option>
-      <option value="transmitted">Transmitted</option>
+      <option value="paid">Paid</option>
+      <option value="unpaid">Unpaid</option>
     </select>
     <select id="category">
       <option value="">All Categories</option>
-      <option value="subcon">Subcon</option>
-      <option value="utilities">Utilities</option>
+      <option value="invoice">Invoice</option>
+      <option value="receipt">Receipt</option>
     </select>
     <select id="trade">
       <option value="">All Trades</option>
-      <option value="meralco">Meralco</option>
-      <option value="mwci">MWCI</option>
-      <option value="subcon">Subcon</option>
+      <option value="domestic">Domestic</option>
+      <option value="international">International</option>
     </select>
     <select id="sort">
       <option value="">Sort By</option>
@@ -41,6 +40,8 @@
       <option value="doc-desc">Doc No Descending</option>
       <option value="title-asc">Title Ascending</option>
       <option value="title-desc">Title Descending</option>
+      <option value="amount-asc">Amount Ascending</option>
+      <option value="amount-desc">Amount Descending</option>
     </select>
   </div>
 
@@ -68,6 +69,7 @@
           <p><strong>Status:</strong> ${doc.status}</p>
           <p><strong>Category:</strong> ${doc.category}</p>
           <p><strong>Trade:</strong> ${doc.trade}</p>
+          <p><strong>Amount:</strong> ₱${doc.amount}</p>
         `;
         list.appendChild(div);
       });
@@ -102,6 +104,12 @@
         case "title-desc":
           filtered.sort((a,b)=>b.title.localeCompare(a.title));
           break;
+        case "amount-asc":
+          filtered.sort((a,b)=>a.amount - b.amount);
+          break;
+        case "amount-desc":
+          filtered.sort((a,b)=>b.amount - a.amount);
+          break;
       }
 
       displayDocuments(filtered);
@@ -113,8 +121,8 @@
     trade.addEventListener("change", filterDocuments);
     sort.addEventListener("change", filterDocuments);
 
-    // Load data from billings.json
-    fetch(data/"billings.json")
+    // Load data from data/billings.json
+    fetch("data/billings.json")
       .then(response => response.json())
       .then(data => {
         documents = data;
