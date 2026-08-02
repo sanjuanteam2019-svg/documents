@@ -2,90 +2,109 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Billing Documents</title>
-
+  <title>Billing</title>
   <link rel="stylesheet" href="css/style.css">
-  
 </head>
 <body>
 
-  <header>Billing</header>
+  <!-- Shared navigation -->
+  <nav class="navbar">
+    <ul>
+      <li><a href="dashboard.html">Dashboard</a></li>
+      <li><a href="projects.html">Projects</a></li>
+      <li><a href="documents.html">Documents</a></li>
+      <li><a href="billings.html">Billing</a></li>
+      <li><a href="notifications.html">Notifications</a></li>
+    </ul>
+  </nav>
 
-  <div class="controls">
-    <input type="text" id="search" placeholder="Search by title...">
-    <select id="status">
-      <option value="">All Status</option>
-      <option value="evaluated">Evaluated</option>
-      <option value="transmitted">Transmitted</option>
-    </select>
-    <select id="category">
-      <option value="">All Categories</option>
-      <option value="utilities">Utilities</option>
-      <option value="subcon">Subcon</option>
-    </select>
-    <select id="trade">
-      <option value="">All Trades</option>
-      <option value="mwci">MWCI</option>
-      <option value="meralco">Meralco</option>
-      <option value="subcon">Subcon</option>
-    </select>
-    <select id="sort">
-      <option value="">Sort By</option>
-      <option value="date-asc">Date Ascending</option>
-      <option value="date-desc">Date Descending</option>
-      <option value="doc-asc">Doc No Ascending</option>
-      <option value="doc-desc">Doc No Descending</option>
-      <option value="title-asc">Title Ascending</option>
-      <option value="title-desc">Title Descending</option>
-      <option value="amount-asc">Amount Ascending</option>
-      <option value="amount-desc">Amount Descending</option>
-    </select>
+  <!-- Page header -->
+  <header>
+    <h1>Billing</h1>
+  </header>
+
+  <div class="container">
+    <!-- Toolbar for filters -->
+    <div class="toolbar">
+      <input type="text" id="searchBox" placeholder="Search by title...">
+      <select id="statusFilter">
+        <option value="">All Status</option>
+        <option value="approved">Approved</option>
+        <option value="submitted">Submitted</option>
+        <option value="draft">Draft</option>
+        <option value="overdue">Overdue</option>
+      </select>
+      <select id="sortFilter">
+        <option value="">Sort By</option>
+        <option value="date-asc">Date Ascending</option>
+        <option value="date-desc">Date Descending</option>
+        <option value="doc-asc">Doc No Ascending</option>
+        <option value="doc-desc">Doc No Descending</option>
+        <option value="title-asc">Title Ascending</option>
+        <option value="title-desc">Title Descending</option>
+        <option value="amount-asc">Amount Ascending</option>
+        <option value="amount-desc">Amount Descending</option>
+      </select>
+    </div>
+
+    <!-- Table container -->
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Doc No</th>
+            <th>Date</th>
+            <th>Status</th>
+            <th>Category</th>
+            <th>Trade</th>
+            <th>Amount</th>
+            <th>File</th>
+          </tr>
+        </thead>
+        <tbody id="document-list"></tbody>
+      </table>
+    </div>
   </div>
-
-  <div id="document-list"></div>
 
   <script>
     let documents = [];
 
-    const search = document.getElementById("search");
-    const status = document.getElementById("status");
-    const category = document.getElementById("category");
-    const trade = document.getElementById("trade");
-    const sort = document.getElementById("sort");
+    const searchBox = document.getElementById("searchBox");
+    const statusFilter = document.getElementById("statusFilter");
+    const sortFilter = document.getElementById("sortFilter");
     const list = document.getElementById("document-list");
 
     function displayDocuments(docs) {
       list.innerHTML = "";
       docs.forEach(doc => {
-        const div = document.createElement("div");
-        div.className = "document";
-        div.innerHTML = `
-          <h3>${doc.title}</h3>
-          <p><strong>Doc No:</strong> ${doc.docNo}</p>
-          <p><strong>Date:</strong> ${doc.date}</p>
-          <p><strong>Status:</strong> ${doc.status}</p>
-          <p><strong>Category:</strong> ${doc.category}</p>
-          <p><strong>Trade:</strong> ${doc.trade}</p>
-          <p><strong>Amount:</strong> ₱${doc.amount}</p>
-          <p>
-            <a href="${doc.file}" target="_blank" class="btn">View File</a>
-          </p>
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${doc.title}</td>
+          <td>${doc.docNo}</td>
+          <td>${doc.date}</td>
+          <td class="status-${doc.status}">${doc.status}</td>
+          <td>${doc.category}</td>
+          <td>${doc.trade}</td>
+          <td>₱${doc.amount}</td>
+          <td>
+            <a href="${doc.file}" target="_blank" class="view-btn">View</a>
+            <a href="${doc.file}&export=download" target="_blank" class="view-btn">Download</a>
+          </td>
         `;
-        list.appendChild(div);
+        list.appendChild(row);
       });
     }
 
     function filterDocuments() {
       let filtered = documents.filter(doc => {
         return (
-          (search.value === "" || doc.title.toLowerCase().includes(search.value.toLowerCase())) &&
-          (status.value === "" || doc.status === status.value) &&
-          (category.value === "" || doc.category === category.value) &&
-          (trade.value === "" || doc.trade === trade.value)
+          (searchBox.value === "" || doc.title.toLowerCase().includes(searchBox.value.toLowerCase())) &&
+          (statusFilter.value === "" || doc.status === statusFilter.value)
         );
       });
 
-      switch (sort.value) {
+      switch (sortFilter.value) {
         case "date-desc":
           filtered.sort((a,b)=>new Date(b.date)-new Date(a.date));
           break;
@@ -115,12 +134,11 @@
       displayDocuments(filtered);
     }
 
-    search.addEventListener("keyup", filterDocuments);
-    status.addEventListener("change", filterDocuments);
-    category.addEventListener("change", filterDocuments);
-    trade.addEventListener("change", filterDocuments);
-    sort.addEventListener("change", filterDocuments);
+    searchBox.addEventListener("keyup", filterDocuments);
+    statusFilter.addEventListener("change", filterDocuments);
+    sortFilter.addEventListener("change", filterDocuments);
 
+    // Load data from data/billings.json
     fetch("data/billings.json")
       .then(response => response.json())
       .then(data => {
