@@ -4,21 +4,57 @@
   <meta charset="UTF-8">
   <title>Billing Documents</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    .controls { margin-bottom: 20px; }
-    .controls select, .controls input { margin-right: 10px; }
-    .document { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
-    .document h3 { margin: 0; }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background-color: #f3f6fa;
+    }
+
+    /* Header styling /
+    header {
+      background-color: #0d1424; / deep navy */
+      color: #fff;
+      padding: 20px 40px;
+      font-size: 28px;
+      font-weight: 700;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+
+    .controls {
+      margin: 20px;
+    }
+
+    .controls select, .controls input {
+      margin-right: 10px;
+      padding: 6px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+
+    .document {
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      padding: 15px;
+      margin: 15px 20px;
+    }
+
+    .document h3 {
+      margin: 0;
+      color: #0d1424;
+    }
+
     .btn {
       display: inline-block;
       padding: 6px 12px;
       margin-right: 8px;
-      background-color: #4285F4; /* Google blue */
+      background-color: #4285F4;
       color: #fff;
       text-decoration: none;
       border-radius: 4px;
       font-size: 14px;
     }
+
     .btn:hover {
       background-color: #3367D6;
     }
@@ -26,14 +62,14 @@
 </head>
 <body>
 
-  <h1>Billing Documents</h1>
+  <header>Billing</header>
 
   <div class="controls">
     <input type="text" id="search" placeholder="Search by title...">
     <select id="status">
       <option value="">All Status</option>
-      <option value="transmitted">Transmitted</option>
       <option value="evaluated">Evaluated</option>
+      <option value="transmitted">Transmitted</option>
     </select>
     <select id="category">
       <option value="">All Categories</option>
@@ -42,8 +78,8 @@
     </select>
     <select id="trade">
       <option value="">All Trades</option>
-      <option value="meralco">Meralco</option>
       <option value="mwci">MWCI</option>
+      <option value="meralco">Meralco</option>
       <option value="subcon">Subcon</option>
     </select>
     <select id="sort">
@@ -138,7 +174,6 @@
     trade.addEventListener("change", filterDocuments);
     sort.addEventListener("change", filterDocuments);
 
-    // Load data from data/billings.json
     fetch("data/billings.json")
       .then(response => response.json())
       .then(data => {
