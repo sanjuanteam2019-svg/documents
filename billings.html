@@ -9,6 +9,19 @@
     .controls select, .controls input { margin-right: 10px; }
     .document { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
     .document h3 { margin: 0; }
+    .btn {
+      display: inline-block;
+      padding: 6px 12px;
+      margin-right: 8px;
+      background-color: #4285F4; /* Google blue */
+      color: #fff;
+      text-decoration: none;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    .btn:hover {
+      background-color: #3367D6;
+    }
   </style>
 </head>
 <body>
@@ -19,18 +32,18 @@
     <input type="text" id="search" placeholder="Search by title...">
     <select id="status">
       <option value="">All Status</option>
-      <option value="evaluated">Evaluated</option>
       <option value="transmitted">Transmitted</option>
+      <option value="evaluated">Evaluated</option>
     </select>
     <select id="category">
       <option value="">All Categories</option>
-      <option value="subcon">Subcon</option>
       <option value="utilities">Utilities</option>
+      <option value="subcon">Subcon</option>
     </select>
     <select id="trade">
       <option value="">All Trades</option>
-      <option value="mwci">MWCI</option>
       <option value="meralco">Meralco</option>
+      <option value="mwci">MWCI</option>
       <option value="subcon">Subcon</option>
     </select>
     <select id="sort">
@@ -71,6 +84,10 @@
           <p><strong>Category:</strong> ${doc.category}</p>
           <p><strong>Trade:</strong> ${doc.trade}</p>
           <p><strong>Amount:</strong> ₱${doc.amount}</p>
+          <p>
+            <a href="${doc.file}" target="_blank" class="btn">View File</a>
+            <a href="${doc.file}&export=download" target="_blank" class="btn">Download</a>
+          </p>
         `;
         list.appendChild(div);
       });
