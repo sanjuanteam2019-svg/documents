@@ -80,6 +80,51 @@ async function loadDashboard() {
 
     });
 
+    // Load all JSON files (adjust paths to match your data folder)
+Promise.all([
+  fetch("data/projectAlpha.json").then(res => res.json()),
+  fetch("data/projectBeta.json").then(res => res.json()),
+  fetch("data/projectGamma.json").then(res => res.json()),
+  fetch("data/billings.json").then(res => res.json())
+])
+.then(results => {
+  // Merge all documents into one array
+  window.allDocuments = results.flat();
+  displayDocuments(window.allDocuments);
+  updateCounters(window.allDocuments); // optional: update dashboard cards
+});
+
+// Render table
+function displayDocuments(docs) {
+  const tableBody = document.getElementById("dashboardTable");
+  tableBody.innerHTML = "";
+  docs.forEach(doc => {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${doc.docNo}</td>
+      <td>${doc.project}</td>
+      <td>${doc.title}</td>
+      <td>${doc.status}</td>
+      <td>${doc.date}</td>
+    `;
+    tableBody.appendChild(row);
+  });
+}
+
+// Search filter
+const searchBox = document.getElementById("searchBox");
+searchBox.addEventListener("keyup", () => {
+  const query = searchBox.value.toLowerCase();
+  const filtered = window.allDocuments.filter(doc =>
+    doc.docNo.toLowerCase().includes(query) ||
+    doc.project.toLowerCase().includes(query) ||
+    doc.title.toLowerCase().includes(query) ||
+    doc.status.toLowerCase().includes(query) ||
+    doc.date.toLowerCase().includes(query)
+  );
+  displayDocuments(filtered);
+});
+
     // Totals
     document.getElementById("totalProjects").textContent = projectFiles.length;
     document.getElementById("totalDocuments").textContent = allDocs.length;
