@@ -1,258 +1,139 @@
-"#DC2626",
-                    "#241AE4"
-                    
-                ],
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Project Detailed Reports</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
 
-                borderWidth:1
+<header>
+  <h2 id="projectTitle">📄 Project Detailed Reports</h2>
+  <a href="reports.html">⬅ Back to Reports</a>
+</header>
 
-            }]
+<div class="toolbar">
+  <input type="text" id="searchBox" placeholder="Search reports...">
 
-        },
+  <select id="categoryFilter">
+    <option value="">All Categories</option>
+    <option value="Site Safety Incident Reports">Site Safety Incident Reports</option>
+    <option value="Site Safety Observation Reports">Site Safety Observation Reports</option>
+    <option value="Safety Corrective Action Reports">Safety Corrective Action Reports</option>
+    <option value="Quality Control Reports">Quality Control Reports</option>
+    <option value="Production Reports">Production Reports</option>
+  </select>
 
-        options:{
+  <select id="tradeFilter">
+    <option value="">All Trades</option>
+    <option value="Operations">Operations</option>
+    <option value="Quality Control">Quality Control</option>
+    <option value="Safety">Safety</option>
+  </select>
 
-            responsive:true,
+  <select id="statusFilter">
+    <option value="">All Statuses</option>
+    <option value="Master Copy">Master Copy</option>
+    <option value="Draft">Draft</option>
+    <option value="Controlled Copy">Controlled Copy</option>
+    <option value="Incomplete">Incomplete</option>
+  </select>
+</div>
 
-            plugins:{
+<p id="recordCount"></p>
 
-                legend:{
+<div class="table-container">
+  <table>
+    <thead>
+      <tr>
+        <th>Report No.</th>
+        <th>Document Title</th>
+        <th>Category</th>
+        <th>Trade</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+</div>
 
-                    position:"bottom"
+<script>
+let documents = [];
 
-                }
+const params = new URLSearchParams(window.location.search);
+const project = params.get("project");
 
-            }
+const projectNames = {
+  "gcsj": "Government Center",
+  "22-storey": "Multipurpose Building",
+  "cluster3": "Cluster 3",
+  "doh": "Department of Health",
+  "evacuation": "Evacuation Center",
+  "csj": "Crematorium San Juan"
+};
 
-        }
+document.getElementById("projectTitle").textContent =
+  "📄 " + (projectNames[project] || "Project Reports");
 
-    });
-
+if (!project) {
+  alert("No project selected.");
+  window.location.href = "reports.html";
 }
 
-displayDocuments(documents);
-
-function updateDashboard(){
-
-    document.getElementById("totalDocs").textContent =
-        documents.length;
-
-    document.getElementById("approvedDocs").textContent =
-        documents.filter(d => d.status === "Approved").length;
-
-    document.getElementById("approvedAsCorrectedDocs").textContent =
-        documents.filter(d => d.status === "Approved As Corrected").length;
-
-    document.getElementById("reviseResubmitDocs").textContent =
-        documents.filter(d => d.status === "Revise & Resubmit").length;
-
-    document.getElementById("submittedDocs").textContent =
-        documents.filter(d => d.status === "Submitted").length;
-
-    document.getElementById("draftDocs").textContent =
-        documents.filter(d => d.status === "Draft").length;
-
-    document.getElementById("transmittedDocs").textContent =
-        documents.filter(d => d.status === "Transmitted").length;
-
-    document.getElementById("cancelledDocs").textContent =
-        documents.filter(d => d.status === "Cancelled").length;
-    
-    document.getElementById("supersededDocs").textContent =    
-        documents.filter(d => d.status === "Superseded").length;
-
-    document.getElementById("overdueDocs").textContent =
-    documents.filter(doc => {
-
-        if (doc.status !== "Submitted") return false;
-
-        if (!doc.dueDate) return false;
-
-        return new Date() > new Date(doc.dueDate);
-
-    }).length;
-
-        updateChart();
-
-}
-
-})
-.catch(error => {
-
-    console.error(error);
-
-});
+fetch(`data/${project}.json`)
+  .then(res => res.json())
+  .then(data => {
+    documents = data;
+    displayDocuments(documents);
+  })
+  .catch(err => console.error("Error loading project data:", err));
 
 function displayDocuments(list) {
-
-    const table = document.getElementById("tableBody");
-
-    table.innerHTML = "";
-
-    list.forEach(doc => {
-
-        let statusClass = "";
-
-        const isOverdue =
-            doc.status === "Submitted" &&
-            doc.dueDate &&
-            new Date() > new Date(doc.dueDate);
-
-        const displayStatus =
-            isOverdue ? "Overdue" : doc.status;
-
-        if (doc.status === "Approved")
-            statusClass = "status-approved";
-
-        if (doc.status === "Approved As Corrected")
-            statusClass = "status-approvedAsCorrected";
-
-        if (doc.status === "Revise & Resubmit")
-            statusClass = "status-reviseResubmit";
-
-        if (doc.status === "Transmitted")
-            statusClass = "status-transmitted";
-
-        if (doc.status === "Submitted")
-            statusClass = "status-submitted";
-
-        if (isOverdue)
-            statusClass = "status-overdue";
-
-        if (doc.status === "Draft")
-            statusClass = "status-draft";
-
-        if (doc.status === "Cancelled")
-            statusClass = "status-cancelled";
-
-        if (doc.status === "Superseded")
-            statusClass = "status-superseded";
-
-        table.innerHTML += `
-            <tr>
-                <td>${doc.docNo}</td>
-                <td>${doc.category}</td>
-                <td>${doc.trade}</td>
-                <td>${doc.title}</td>
-                <td>${doc.revision}</td>
-                <td class="${statusClass}">
-                    ${displayStatus}
-                </td>
-                <td>${doc.date}</td>
-                <td>
-                    <a href="${doc.link}" target="_blank" class="view-btn">
-                        View
-                    </a>
-                </td>
-            </tr>
-        `;
-
-    });
-
-    document.getElementById("recordCount").innerHTML =
-        "Total Documents : <b>" + list.length + "</b>";
-
+  const tbody = document.getElementById("tableBody");
+  tbody.innerHTML = "";
+  list.forEach(doc => {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${doc.reportNo}</td>
+      <td>${doc.title}</td>
+      <td>${doc.category}</td>
+      <td>${doc.trade}</td>
+      <td>${doc.status}</td>
+    `;
+    tbody.appendChild(row);
+  });
+  document.getElementById("recordCount").textContent =
+    `Showing ${list.length} of ${documents.length} reports`;
 }
 
-const search=document.getElementById("searchBox");
+function filterDocuments() {
+  const keyword = searchBox.value.toLowerCase();
+  const cat = categoryFilter.value;
+  const trade = tradeFilter.value;
+  const status = statusFilter.value;
 
-const status=document.getElementById("statusFilter");
+  const filtered = documents.filter(doc => {
+    return (
+      (keyword === "" || doc.title.toLowerCase().includes(keyword) || doc.reportNo.toLowerCase().includes(keyword)) &&
+      (cat === "" || doc.category === cat) &&
+      (trade === "" || doc.trade === trade) &&
+      (status === "" || doc.status === status)
+    );
+  });
 
-const category = document.getElementById("categoryFilter");
-
-const trade = document.getElementById("tradeFilter");
-
-const sort = document.getElementById("sortFilter");
-
-function filterDocuments(){
-
-    const keyword = search.value.toLowerCase();
-
-    const selectedStatus = status.value;
-    const selectedCategory = category.value;
-    const selectedTrade = trade.value;
-
-    const filtered = documents.filter(doc => {
-
-        const matchText =
-            doc.docNo.toLowerCase().includes(keyword) ||
-            doc.title.toLowerCase().includes(keyword) ||
-            doc.category.toLowerCase().includes(keyword) ||
-            doc.trade.toLowerCase().includes(keyword);
-
-        const isOverdue =
-    doc.status === "Submitted" &&
-    doc.dueDate &&
-    new Date() > new Date(doc.dueDate);
-
-        const displayStatus =
-    isOverdue ? "Overdue" : doc.status;
-
-        const matchStatus =
-    selectedStatus === "" ||
-    (selectedStatus === "Overdue"
-        ? isOverdue
-        : doc.status === selectedStatus);
-
-        const matchCategory =
-            selectedCategory === "" ||
-            doc.category === selectedCategory;
-
-        const matchTrade =
-            selectedTrade === "" ||
-            doc.trade === selectedTrade;
-
-        return (
-            matchText &&
-            matchStatus &&
-            matchCategory &&
-            matchTrade
-  
-        );
-
-    });
-
-    switch(sort.value){
-
-        case "date-desc":
-            filtered.sort((a,b)=>new Date(b.date)-new Date(a.date));
-            break;
-
-        case "date-asc":
-            filtered.sort((a,b)=>new Date(a.date)-new Date(b.date));
-            break;
-
-        case "doc-asc":
-            filtered.sort((a,b)=>a.docNo.localeCompare(b.docNo));
-            break;
-
-        case "doc-desc":
-            filtered.sort((a,b)=>b.docNo.localeCompare(a.docNo));
-            break;
-
-        case "title-asc":
-            filtered.sort((a,b)=>a.title.localeCompare(b.title));
-            break;
-
-        case "title-desc":
-            filtered.sort((a,b)=>b.title.localeCompare(a.title));
-            break;
-
-    }
-
-    displayDocuments(filtered);
-
+  displayDocuments(filtered);
 }
 
-search.addEventListener("keyup",filterDocuments);
+const searchBox = document.getElementById("searchBox");
+const categoryFilter = document.getElementById("categoryFilter");
+const tradeFilter = document.getElementById("tradeFilter");
+const statusFilter = document.getElementById("statusFilter");
 
-status.addEventListener("change",filterDocuments);
-
-category.addEventListener("change", filterDocuments);
-
-trade.addEventListener("change", filterDocuments);
-
-sort.addEventListener("change", filterDocuments);
-
+searchBox.addEventListener("keyup", filterDocuments);
+categoryFilter.addEventListener("change", filterDocuments);
+tradeFilter.addEventListener("change", filterDocuments);
+statusFilter.addEventListener("change", filterDocuments);
 </script>
 
 </body>
+</html>
