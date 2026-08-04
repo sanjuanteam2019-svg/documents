@@ -1,6 +1,6 @@
 [
   {
-    "docNo":"GCSJ-PDAL-001",
+    "reportNo":"GCSJ-PDAL-001",
     "title":"PDAL-001",
     "date":"2026-07-21",
     "status":"draft",
@@ -10,7 +10,7 @@
   },
 
    {
-    "docNo":"GCSJ-PDAL-002",
+    "reportNo":"GCSJ-PDAL-002",
     "title":"PDAL-002",
     "date":"2026-07-21",
     "status":"draft",
@@ -20,7 +20,7 @@
   },
 
   {
-   "docNo":"GCSJ-PDAL-003",
+   "reportNo":"GCSJ-PDAL-003",
     "title":"PDAL-003",
     "date":"2026-07-21",
     "status":"draft",
