@@ -68,6 +68,7 @@
       <tr>
         <th>Report No.</th>
         <th>Document Title</th>
+        <th>Project</th>
         <th>Category</th>
         <th>Trade</th>
         <th>Status</th>
@@ -110,7 +111,7 @@ function filterReports() {
   const filtered = reports.filter(rep => {
     return (
       (keyword === "" || rep.title.toLowerCase().includes(keyword) || rep.reportNo.toLowerCase().includes(keyword)) &&
-      (pro === "" || rep.project === pro) &&
+      (proj === "" || rep.project === proj) &&
       (cat === "" || rep.category === cat) &&
       (trade === "" || rep.trade === trade) &&
       (status === "" || rep.status === status)
