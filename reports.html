@@ -87,6 +87,7 @@ function displayReports(list) {
     const row = document.createElement("tr");
     row.innerHTML = `
       <td>${rep.reportNo}</td>
+      <td>${rep.project}</td>
       <td>${rep.title}</td>
       <td>${rep.category}</td>
       <td>${rep.trade}</td>
@@ -109,6 +110,7 @@ function filterReports() {
   const filtered = reports.filter(rep => {
     return (
       (keyword === "" || rep.title.toLowerCase().includes(keyword) || rep.reportNo.toLowerCase().includes(keyword)) &&
+      (pro === "" || rep.project === pro) &&
       (cat === "" || rep.category === cat) &&
       (trade === "" || rep.trade === trade) &&
       (status === "" || rep.status === status)
@@ -119,6 +121,7 @@ function filterReports() {
 }
 
 const searchBox = document.getElementById("searchBox");
+const projectFilter = document.getElementById("projectFilter");  
 const categoryFilter = document.getElementById("categoryFilter");
 const tradeFilter = document.getElementById("tradeFilter");
 const statusFilter = document.getElementById("statusFilter");
