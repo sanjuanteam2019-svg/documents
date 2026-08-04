@@ -1,133 +1,294 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Reports</title>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
 
-<style>
+    <title>Reports Register</title>
 
-body{
-    margin:0;
-    font-family:Segoe UI,Arial,sans-serif;
-    background:#edf2f7;
-}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-header{
-    background:#0f172a;
-    color:white;
-    padding:20px;
-}
-
-.container{
-    padding:30px;
-}
-
-.grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
-    gap:20px;
-}
-
-.card{
-    background:white;
-    padding:25px;
-    border-radius:12px;
-    box-shadow:0 5px 15px rgba(0,0,0,.1);
-}
-
-.card h2{
-    margin-top:0;
-    color:#2563eb;
-}
-
-.button{
-    display:inline-block;
-    margin-top:15px;
-    padding:10px 20px;
-    background:#2563eb;
-    color:white;
-    text-decoration:none;
-    border-radius:6px;
-}
-
-.button:hover{
-    background:#1d4ed8;
-}
-
-</style>
-
+    <link rel="stylesheet" href="css/style.css">
 </head>
-
- <!-- Shared navigation -->
-  <nav class="navbar">
-    <ul>
-      <li><a href="dashboard.html">Dashboard</a></li>
-      <li><a href="projects.html">Projects</a></li>
-      <li><a href="billings.html">Billing</a></li>
-      <li><a href="reports.html">Reports</a></li>
-      <li><a href="notifications.html">Notifications</a></li>
-    </ul>
-  </nav>    
 
 <body>
 
+<div class="chart-card">
+
+    <h3>Document Status Overview</h3>
+
+    <canvas id="statusChart"></canvas>
+
+</div>
+
 <header>
+    <h2 id="projectTitle">📄 projectNames</h2>
 
-<h1>Projects</h1>
-
+    <a href="reports.html">⬅ Back to Projects</a>
 </header>
+
+<div class="dashboard">
+
+    <div class="card">
+        <h3>Total Documents</h3>
+        <h1 id="totalDocs">0</h1>
+    </div>
+
+    <div class="card approved">
+        <h3>Approved</h3>
+        <h1 id="approvedDocs">0</h1>
+    </div>
+
+    <div class="card approved-as-corrected">
+        <h3>Approved As Corrected</h3>
+        <h1 id="approvedAsCorrectedDocs">0</h1>
+    </div>
+
+    <div class="card reviseResubmit">
+        <h3>Revise & Resubmit</h3>
+        <h1 id="reviseResubmitDocs">0</h1>
+    </div>
+    
+    <div class="card submitted">
+        <h3>Submitted</h3>
+        <h1 id="submittedDocs">0</h1>
+    </div>
+
+    <div class="card draft">
+        <h3>Draft</h3>
+        <h1 id="draftDocs">0</h1>
+    </div>
+
+     <div class="card transmitted">
+        <h3>Transmitted</h3>
+        <h1 id="transmittedDocs">0</h1>
+    </div>
+
+    <div class="card cancelled">
+        <h3>Cancelled</h3>
+        <h1 id="cancelledDocs">0</h1>
+    </div>
+
+    <div class="card superseded">
+        <h3>Superseded</h3>
+        <h1 id="supersededDocs">0</h1>
+    </div>
+
+    <div class="card overdue">
+    <h3>Overdue</h3>
+    <h1 id="overdueDocs">0</h1>
+</div>
+
+</div>
 
 <div class="container">
 
-<div class="grid">
+    <div class="toolbar">
 
-<div class="card">
-<h2>🏢 Government Center</h2>
-<p>San Juan City Government Center Project</p>
-<a class="button" href="pdal.html?project=government-center">
-    Government Center</a>
+        <input
+            type="text"
+            id="searchBox"
+            placeholder="Search documents...">
+
+        <select id="statusFilter">
+
+            <option value="">All Status</option>
+            <option value="Approved">Approved</option>
+            <option value="Approved As Corrected">Approved As Corrected</option>
+            <option value="Revise & Resubmit">Revise & Resubmit</option>
+            <option value="Submitted">Submitted</option>
+            <option value="Draft">Draft</option>
+            <option value="transmitted">Transmitted</option>
+            <option value="cancelled">Cancelled</option>
+            <option value="Superseded">Superseded</option>
+            <option value="Overdue">Overdue</option>
+
+        </select>
+
+        <select id="categoryFilter">
+
+    <option value="">All Categories</option>
+    <option value="Daily Reports">Daily Reports</option>
+    <option value="Quality Control Reports">Quality Control Reports</option>
+    <option value="Site Safety Incident Reports">Site Safety Incident Reports</option>
+    <option value="Site Safety Observation Reports">Site Safety Observation Reports</option>
+    <option value="Safety Corrective Action Reports">Safety Corrective Action Reports</option>
+         </select>
+
+         <select id="tradeFilter">
+    <option value="">All Trades</option>
+    <option value="Production">Production</option>
+    <option value="Quality Conrol">Quality Control</option>
+    <option value="Safety">Safety</option>
+       
+</select>
+
+<select id="sortFilter">
+    <option value="">Sort By</option>
+    <option value="date-desc">Newest Date</option>
+    <option value="date-asc">Oldest Date</option>
+    <option value="doc-asc">Document No. (A-Z)</option>
+    <option value="doc-desc">Document No. (Z-A)</option>
+    <option value="title-asc">Title (A-Z)</option>
+    <option value="title-desc">Title (Z-A)</option>
+    
+</select>
+
+    </div>
+
+    <p id="recordCount"></p>
+
+    <div class="table-container">
+
+    <table id="docTable">
+
+        <thead>
+
+            <tr>
+                <th>Document No.</th>
+                <th>Category</th>
+                <th>Trade</th>
+                <th>Title</th>
+                <th>Revision</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>File</th>
+            </tr>
+
+        </thead>
+
+        <tbody id="tableBody">
+        </tbody>
+
+    </table>
+
 </div>
 
-<div class="card">
-<h2>🏫 School Cluster 3</h2>
-<p>Schools Cluster Construction</p>
-<a class="button" href="pdal.html?project=school-cluster3">
-    School Cluster 3</a>
-</div>
+<script>
 
-<div class="card">
-<h2>🏢 22-Storey Multipurpose Building</h2>
-<p>Housing Building Project</p>
-<a class="button" href="pdal.html?project=22-storey-multipurpose-building">
-    22-storey multipurpose building</a>
-</div>
+let documents = [];
 
-<div class="card">
-<h2>🏥 Medical Center</h2>
-<p>DOH-HFEP Project</p>
-<a class="button" href="pdal.html?project=medical-center">
-    Medical Center</a>
-</div>
+let statusChart;
 
-<div class="card">
-<h2>🏠 Evacuation Center</h2>
-<p>San Juan Evacuation Center Project</p>
-<a class="button" href="pdal.html?project=evacuation-center">
-    Evacuation Center</a>
-</div>
+const params = new URLSearchParams(window.location.search);
+const project = params.get("project");
 
-<div class="card">
-<h2>🏠 Crematorium</h2>
-<p>San Juan Crematorium Project</p>
-<a class="button" href="pdal.html?project=crematorium">
-    Crematorium</a>    
-</div>
+if (!project) {
 
-</div>
+    alert("No project selected.");
 
-</div>
+    window.location.href = "projects.html";
 
-</body>
-</html>
+}
+const projectNames = {
+    "gcsj": "GCSJ",
+    "22-storey": "22-Storey",
+    "cluster3": "Cluster 3",
+    "doh": "DOH",
+    "evacuation": "Evacuation Center",
+    "csj" "Crematorium San Juan"
+};
+document.getElementById("projectTitle").innerHTML =
+    "📄 " + (projectNames[project] || "Document Register");
 
+    fetch(`data/${project}.json`)
+.then(response => {
+
+    if (!response.ok) {
+
+        throw new Error("Project database not found.");
+
+    }
+
+    return response.json();
+
+})
+.then(data => {
+
+    documents = data;
+
+updateDashboard();
+
+function updateChart(){
+
+    const approved =
+        documents.filter(d=>d.status==="Approved").length;
+
+    const approvedAsCorrected =
+        documents.filter(d=>d.status==="Approved As Corrected").length;
+
+    const reviseResubmit =
+        documents.filter(d=>d.status==="Revise & Resubmit").length;
+
+    const submitted =
+        documents.filter(d=>d.status==="Submitted").length;
+
+    const draft =
+        documents.filter(d=>d.status==="Draft").length;
+
+    const transmitted =
+        documents.filter(d=>d.status==="Transmitted").length;
+
+    const cancelled =
+        documents.filter(d=>d.status==="Cancelled").length;
+
+    const superseded =
+        documents.filter(d=>d.status==="Superseded").length;
+
+    const overdue =
+    documents.filter(doc =>doc.status==="Submitted" &&
+        doc.dueDate &&
+        new Date() > new Date(doc.dueDate)
+    ).length;
+
+    if(statusChart){
+
+        statusChart.destroy();
+
+    }
+
+    const ctx =
+        document.getElementById("statusChart");
+
+    statusChart = new Chart(ctx,{
+
+        type:"doughnut",
+
+        data:{
+
+            labels:[
+                "Approved",
+                "Approved As Corrected",
+                "Revise & Resubmit",
+                "Submitted",
+                "Draft",
+                "Superseded",
+                "Cancelled",
+                "Overdue",
+                "Transmitted"
+            ],
+
+            datasets:[{
+
+                data:[
+                    approved,
+                    approvedAsCorrected,
+                    reviseResubmit,
+                    submitted,
+                    draft,
+                    superseded,
+                    cancelled,
+                    overdue,
+                    transmitted
+                ],
+
+                backgroundColor:[
+                    "#16a34a",
+                    "#FEBE1E",
+                    "#FE0000",
+                    "#765BFF",
+                    "#D2591C",
+                    "#D8E438",
+                    "#EDADAD",
