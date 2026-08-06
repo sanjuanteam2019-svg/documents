@@ -1,1 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Multipurpose Building – Document Control</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h2 { margin-bottom: 10px; }
+    form { margin-bottom: 20px; }
+    input, select, button { margin: 5px; padding: 5px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+    th { background: #f4f4f4; }
 
+    /* Status colors */
+    .status-A { background-color: #4CAF50; color: white; padding: 4px 8px; border-radius: 4px; }
+    .status-ASC { background-color: #2196F3; color: white; padding: 4px 8px; border-radius: 4px; }
+    .status-RR { background-color: #FF9800; color: white; padding: 4px 8px; border-radius: 4px; }
+    .status-Sup { background-color: #757575; color: white; padding: 4px 8px; border-radius: 4px; }
+    .status-Sub { background-color: #FFEB3B; color: black; padding: 4px 8px; border-radius: 4px; }
+    .status-TR { background-color: #9C27B0; color: white; padding: 4px 8px; border-radius: 4px; }
+    .status-P { background-color: #F44336; color: white; padding: 4px 8px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <h2>Multipurpose Building – Document Control</h2>
+
+  <!-- Upload Form -->
+  <form id="uploadForm">
+    <input type="text" name="title" placeholder="Title" required>
+    <input type="text" name="description" placeholder="Description" required>
+    <input type="file" name="file" required>
+    <select name="ballInCourt">
+      <option value="Engineer">Engineer (Originator)</option>
+      <option value="DC">Document Controller (DC)</option>
+      <option value="WTA">WTA (Consultant)</option>
+    </select>
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- Document Table -->
+  <table>
+    <thead>
+      <tr>
+        <th>Document No</th>
+        <th>Title</th>
+        <th>Revision</th>
+        <th>Status</th>
+        <th>Ball in Court</th>
+        <th>File</th>
+      </tr>
+    </thead>
+    <tbody id="docList">
+      <!-- Dynamic rows will appear here -->
+    </tbody>
+  </table>
+
+  <!-- Google API -->
+  <script src="https://apis.google.com/js/api.js"></script>
+  <script>
+    // Initialize Google API client
+    function initClient() {
+      gapi.load('client:auth2', () => {
+        gapi.client.init({
+          apiKey: 'YOUR_API_KEY',
+          clientId: 'YOUR_CLIENT_ID.apps.googleusercontent.com',
+          discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
+          scope: 'https://www.googleapis.com/auth/drive.file'
+        });
+      });
+    }
+
+    // Upload file to Google Drive
+    async function uploadToDrive(file) {
+      const metadata = { name: file.name, mimeType: file.type };
+      const form = new FormData();
+      form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+      form.append('file', file);
+
+      const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+        method: 'POST',
+        headers: new Headers({ 'Authorization': 'Bearer ' + gapi.auth.getToken().access_token }),
+        body: form
+      });
+      return await res.json();
+    }
+
+    // Handle form submission
+    const form = document.getElementById('uploadForm');
+    const docList = document.getElementById('docList');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const title = form.title.value;
+      const ballInCourt = form.ballInCourt.value;
+      const file = form.file.files[0];
+
+      // Upload to Google Drive
+      const uploaded = await uploadToDrive(file);
+      const fileLink = `https://drive.google.com/file/d/${uploaded.id}/view?usp=sharing`;
+
+      // Add row to table
+      const row = `
+        <tr>
+          <td>${Math.floor(Math.random() * 10000)}</td>
+          <td>${title}</td>
+          <td>D</td>
+          <td><span class="status-Sub">Sub</span></td>
+          <td>${ballInCourt}</td>
+          <td><a href="${fileLink}" target="_blank">View File</a></td>
+        </tr>`;
+      docList.insertAdjacentHTML('beforeend', row);
+      form.reset();
+    });
+
+    initClient();
+  </script>
+</body>
+</html>
