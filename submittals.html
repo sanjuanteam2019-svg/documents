@@ -4,7 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Submittals</title>
-<link rel="stylesheet" href="css/style.css"> <!-- reuse dashboard styles -->
+<link rel="stylesheet" href="css/style.css">
+<style>
+/* Status badge colors */
+.status-A { background:#4CAF50; color:white; padding:4px 8px; border-radius:4px; }
+.status-ASC { background:#2196F3; color:white; padding:4px 8px; border-radius:4px; }
+.status-RR { background:#FF9800; color:white; padding:4px 8px; border-radius:4px; }
+.status-Sup { background:#757575; color:white; padding:4px 8px; border-radius:4px; }
+.status-Sub { background:#FFEB3B; color:black; padding:4px 8px; border-radius:4px; }
+.status-TR { background:#9C27B0; color:white; padding:4px 8px; border-radius:4px; }
+.status-P { background:#F44336; color:white; padding:4px 8px; border-radius:4px; }
+</style>
 </head>
 <body>
 
@@ -14,7 +24,7 @@
     <li><a href="dashboard.html" style="color:white;text-decoration:none;">🏠 Dashboard</a></li>
     <li><a href="projects.html" style="color:white;text-decoration:none;">📁 Projects</a></li>
     <li><a href="documents.html" style="color:white;text-decoration:none;">📄 Documents</a></li>
-    <li>📄 Submittals</li> <!-- current page -->
+    <li>📄 Submittals</li>
     <li><a href="billings.html" style="color:white;text-decoration:none;">📄 Billings</a></li>
     <li><a href="reports.html" style="color:white;text-decoration:none;">📊 Reports</a></li>
     <li>⚙ Settings</li>
@@ -52,9 +62,7 @@
         <th>File</th>
       </tr>
     </thead>
-    <tbody id="docList">
-      <!-- Rows added dynamically -->
-    </tbody>
+    <tbody id="docList"></tbody>
   </table>
 </div>
 
