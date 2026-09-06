@@ -1,2030 +1,337 @@
-"use strict";
+<!DOCTYPE html>
+<html lang="en">
 
+<head>
 
-// ============================================================
-// DEVEX DOCUMENT PORTAL
-// DASHBOARD
-// ============================================================
+<meta charset="UTF-8">
 
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-// ============================================================
-// CONFIGURATION
-// ============================================================
+<title>Dashboard</title>
 
-// Replace this with your deployed Google Apps Script Web App URL.
-// The URL must end with /exec.
-//
-// Example:
-// https://script.google.com/macros/s/AKfycbxxxxxxxx/exec
+<style>
 
-const DOCUMENTS_API_URL =
-    "https://script.google.com/macros/s/AKfycbwjZ_jsSXJlGmwAG68LxIOtKm0KAurN_jy89Z_3Ris0-2ujDtBbC-Zxvtr3wvlDtohTSA/exec";
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Segoe UI,Arial,sans-serif;
+}
 
+body{
+display:flex;
+background:#edf2f7;
+}
 
-// Number of latest documents displayed in the dashboard table.
-const LATEST_DOCUMENT_LIMIT = 20;
+/* Sidebar */
 
+.sidebar{
 
-// Locale used when displaying dates.
-const DATE_LOCALE = "en-US";
-
-
-// ============================================================
-// PROJECT DISPLAY NAMES
-// ============================================================
-
-const PROJECT_NAMES = {
-
-    "22-storey-multipurpose-building":
-        "Multipurpose Building",
-
-    "government-center":
-        "Government Center",
-
-    "school-cluster3":
-        "School Cluster 3"
-
-};
-
-
-// ============================================================
-// GLOBAL DASHBOARD DATA
-// ============================================================
-
-// Contains only the latest documents returned by the API.
-let allDocs = [];
-
-
-// Retains the latest successful dashboard summary.
-let dashboardSummary = null;
-
-
-// Prevents an older search request or rendering operation
-// from replacing newer results.
-let dashboardLoadSequence = 0;
-
-
-// ============================================================
-// CURRENT USER
-// ============================================================
-
-function initializeCurrentUser() {
-
-    const welcomeElement =
-        document.getElementById(
-            "welcomeUser"
-        );
-
-
-    if (!welcomeElement) {
-        return;
-    }
-
-
-    try {
-
-        const storedUser =
-            localStorage.getItem(
-                "currentUser"
-            );
-
-
-        if (!storedUser) {
-
-            welcomeElement.textContent =
-                "Welcome";
-
-            return;
-
-        }
-
-
-        const currentUser =
-            JSON.parse(
-                storedUser
-            );
-
-
-        const displayName =
-            currentUser &&
-            (
-                currentUser.fullname ||
-                currentUser.fullName ||
-                currentUser.name ||
-                currentUser.username
-            );
-
-
-        welcomeElement.textContent =
-            displayName
-                ? `Welcome, ${displayName}`
-                : "Welcome";
-
-
-    } catch (error) {
-
-        console.error(
-            "Unable to read the current user:",
-            error
-        );
-
-
-        welcomeElement.textContent =
-            "Welcome";
-
-    }
+width:240px;
+height:140vh;
+background:#0f172a;
+color:white;
+padding:20px;
 
 }
 
+.sidebar h2{
 
-// ============================================================
-// LOGOUT
-// ============================================================
-
-function initializeLogoutButton() {
-
-    const logoutButton =
-        document.getElementById(
-            "logoutBtn"
-        );
-
-
-    if (!logoutButton) {
-        return;
-    }
-
-
-    // If auth.js already assigned a direct onclick handler,
-    // do not replace it.
-    if (
-        typeof logoutButton.onclick ===
-        "function"
-    ) {
-
-        return;
-
-    }
-
-
-    logoutButton.addEventListener(
-        "click",
-        function () {
-
-            localStorage.removeItem(
-                "currentUser"
-            );
-
-
-            // Change login.html if your login page uses
-            // a different file name.
-            window.location.href =
-                "login.html";
-
-        }
-    );
+margin-bottom:40px;
+text-align:center;
+font-size:18px;
 
 }
 
+.sidebar ul{
 
-// ============================================================
-// START DASHBOARD
-// ============================================================
-
-async function loadDashboard() {
-
-    const sequence =
-        ++dashboardLoadSequence;
-
-
-    console.log(
-        "Dashboard started"
-    );
-
-
-    setDashboardLoadingState();
-
-
-    // The latest-document request and the summary request do
-    // not depend on each other, so load them simultaneously.
-    const results =
-        await Promise.allSettled([
-
-            fetchLatestDocuments(
-                LATEST_DOCUMENT_LIMIT
-            ),
-
-            fetchDashboardSummary()
-
-        ]);
-
-
-    // Ignore results from an older dashboard load.
-    if (
-        sequence !==
-        dashboardLoadSequence
-    ) {
-
-        return;
-
-    }
-
-
-    const latestResult =
-        results[0];
-
-
-    const summaryResult =
-        results[1];
-
-
-    // --------------------------------------------------------
-    // Latest documents
-    // --------------------------------------------------------
-
-    if (
-        latestResult.status ===
-        "fulfilled"
-    ) {
-
-        const latestData =
-            latestResult.value;
-
-
-        allDocs =
-            Array.isArray(
-                latestData.documents
-            )
-                ? latestData.documents
-                : [];
-
-
-        displayDocuments(
-            allDocs
-        );
-
-
-        updateLatestDocumentsLabel(
-            allDocs.length,
-            latestData.totalRegisteredDocuments
-        );
-
-
-    } else {
-
-        allDocs = [];
-
-
-        console.error(
-            "Latest documents error:",
-            latestResult.reason
-        );
-
-
-        displayTableMessage(
-            "Unable to load the latest documents."
-        );
-
-
-        updateLatestDocumentsLabel(
-            0,
-            0
-        );
-
-    }
-
-
-    // --------------------------------------------------------
-    // Overall dashboard summary
-    // --------------------------------------------------------
-
-    if (
-        summaryResult.status ===
-        "fulfilled"
-    ) {
-
-        dashboardSummary =
-            summaryResult.value;
-
-
-        updateDashboardSummary(
-            dashboardSummary
-        );
-
-
-    } else {
-
-        dashboardSummary = null;
-
-
-        console.error(
-            "Dashboard summary error:",
-            summaryResult.reason
-        );
-
-
-        setDashboardSummaryError();
-
-    }
+list-style:none;
 
 }
 
+.sidebar li{
 
-// ============================================================
-// FETCH LATEST DOCUMENTS
-// ============================================================
-
-async function fetchLatestDocuments(limit) {
-
-    const url =
-        buildApiUrl({
-
-            action:
-                "latest",
-
-            limit:
-                limit
-
-        });
-
-
-    const data =
-        await fetchJson(url);
-
-
-    if (
-        !Array.isArray(
-            data.documents
-        )
-    ) {
-
-        throw new Error(
-            "The latest-document response does not contain a documents array."
-        );
-
-    }
-
-
-    return data;
+padding:15px;
+margin-bottom:10px;
+cursor:pointer;
+border-radius:8px;
 
 }
 
+.sidebar li:hover{
 
-// ============================================================
-// FETCH DASHBOARD SUMMARY
-// ============================================================
-
-async function fetchDashboardSummary() {
-
-    const url =
-        buildApiUrl({
-
-            action:
-                "count"
-
-        });
-
-
-    return fetchJson(url);
+background:#1e293b;
 
 }
 
+/* Main */
 
-// ============================================================
-// BUILD API URL
-// ============================================================
+.main{
 
-function buildApiUrl(parameters) {
-
-    if (
-        !DOCUMENTS_API_URL ||
-        DOCUMENTS_API_URL.includes(
-            "YOUR_DEPLOYMENT_ID"
-        )
-    ) {
-
-        throw new Error(
-            "DOCUMENTS_API_URL has not been configured."
-        );
-
-    }
-
-
-    const url =
-        new URL(
-            DOCUMENTS_API_URL
-        );
-
-
-    Object.entries(
-        parameters || {}
-    ).forEach(
-        function ([key, value]) {
-
-            if (
-                value !== null &&
-                typeof value !== "undefined" &&
-                value !== ""
-            ) {
-
-                url.searchParams.set(
-                    key,
-                    String(value)
-                );
-
-            }
-
-        }
-    );
-
-
-    // This helps identify a fresh request while the API
-    // still uses cache: no-store.
-    url.searchParams.set(
-        "_",
-        Date.now().toString()
-    );
-
-
-    return url.toString();
+flex:1;
+padding:30px;
 
 }
 
+/* Header */
 
-// ============================================================
-// FETCH JSON
-// ============================================================
+.header{
 
-async function fetchJson(url) {
-
-    const response =
-        await fetch(
-            url,
-            {
-
-                method:
-                    "GET",
-
-                redirect:
-                    "follow",
-
-                cache:
-                    "no-store"
-
-            }
-        );
-
-
-    if (!response.ok) {
-
-        throw new Error(
-            `The server returned HTTP ${response.status}.`
-        );
-
-    }
-
-
-    const responseText =
-        await response.text();
-
-
-    let data;
-
-
-    try {
-
-        data =
-            JSON.parse(
-                responseText
-            );
-
-
-    } catch (error) {
-
-        console.error(
-            "Unexpected server response:",
-            responseText
-        );
-
-
-        throw new Error(
-            "The server did not return valid JSON."
-        );
-
-    }
-
-
-    if (
-        !data ||
-        data.success !== true
-    ) {
-
-        throw new Error(
-            data &&
-            data.message
-                ? data.message
-                : "The Google Apps Script request failed."
-        );
-
-    }
-
-
-    return data;
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:30px;
 
 }
 
+.header h1{
 
-// ============================================================
-// UPDATE DASHBOARD SUMMARY
-// ============================================================
-
-function updateDashboardSummary(data) {
-
-    // Registered spreadsheet document records.
-    //
-    // To show physical Drive files instead, replace
-    // data.registeredDocuments with data.driveFiles.
-    setText(
-        "totalDocuments",
-        data.registeredDocuments
-    );
-
-
-    setText(
-        "submitted",
-        getStatusCount(
-            data.statusCounts,
-            "Submitted"
-        )
-    );
-
-
-    setText(
-        "approved",
-        getStatusCount(
-            data.statusCounts,
-            "Approved"
-        )
-    );
-
-
-    setText(
-        "approvedAsCorrected",
-        getStatusCount(
-            data.statusCounts,
-            "Approved As Corrected"
-        )
-    );
-
-
-    setText(
-        "reviseResubmit",
-        getStatusCount(
-            data.statusCounts,
-            "Revise & Resubmit"
-        )
-    );
-
-
-    setText(
-        "draft",
-        getStatusCount(
-            data.statusCounts,
-            "Draft"
-        )
-    );
-
-
-    setText(
-        "superseded",
-        getStatusCount(
-            data.statusCounts,
-            "Superseded"
-        )
-    );
-
-
-    setText(
-        "cancelled",
-        getStatusCount(
-            data.statusCounts,
-            "Cancelled"
-        )
-    );
-
-
-    setText(
-        "totalProjects",
-        getTotalProjects(data)
-    );
-
-
-    setText(
-        "dueThisWeek",
-        data.dueThisWeek
-    );
-
-
-    setText(
-        "overdue",
-        data.overdue
-    );
-
-
-    setSummaryCardTitles(data);
-
-
-    console.log(
-        "Dashboard summary:",
-        data
-    );
+color:#0f172a;
 
 }
 
+/* Cards */
 
-// ============================================================
-// TOTAL PROJECTS
-// ============================================================
+.cards{
 
-function getTotalProjects(data) {
+display:grid;
 
-    const configuredTotal =
-        toNonNegativeNumber(
-            data.totalProjects
-        );
+grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
 
-
-    if (configuredTotal > 0) {
-
-        return configuredTotal;
-
-    }
-
-
-    if (
-        data.projectCounts &&
-        typeof data.projectCounts ===
-        "object"
-    ) {
-
-        return Object.keys(
-            data.projectCounts
-        ).filter(
-            function (project) {
-
-                return (
-                    project &&
-                    project !== "Unspecified"
-                );
-
-            }
-        ).length;
-
-    }
-
-
-    return 0;
+gap:20px;
 
 }
 
+.card{
 
-// ============================================================
-// STATUS COUNT
-// ============================================================
+background:white;
 
-function getStatusCount(
-    statusCounts,
-    expectedStatus
-) {
+padding:25px;
 
-    if (
-        !statusCounts ||
-        typeof statusCounts !==
-        "object"
-    ) {
+border-radius:12px;
 
-        return 0;
-
-    }
-
-
-    const normalizedExpectedStatus =
-        normalizeText(
-            expectedStatus
-        );
-
-
-    const matchingStatus =
-        Object.keys(
-            statusCounts
-        ).find(
-            function (status) {
-
-                return (
-                    normalizeText(status) ===
-                    normalizedExpectedStatus
-                );
-
-            }
-        );
-
-
-    if (!matchingStatus) {
-
-        return 0;
-
-    }
-
-
-    return toNonNegativeNumber(
-        statusCounts[
-            matchingStatus
-        ]
-    );
+box-shadow:0 5px 15px rgba(0,0,0,.08);
 
 }
 
+.card h2{
 
-// ============================================================
-// SET SUMMARY CARD TITLES
-// ============================================================
+font-size:40px;
 
-function setSummaryCardTitles(data) {
+color:#2563eb;
 
-    const totalDocumentsElement =
-        document.getElementById(
-            "totalDocuments"
-        );
-
-
-    if (totalDocumentsElement) {
-
-        totalDocumentsElement.title =
-            [
-                "Registered document records: " +
-                    toNonNegativeNumber(
-                        data.registeredDocuments
-                    ),
-
-                "Unique registered files: " +
-                    toNonNegativeNumber(
-                        data.uniqueRegisteredFiles
-                    ),
-
-                "Physical Drive files: " +
-                    toNonNegativeNumber(
-                        data.driveFiles
-                    )
-
-            ].join("\n");
-
-    }
-
-
-    const overdueElement =
-        document.getElementById(
-            "overdue"
-        );
-
-
-    if (overdueElement) {
-
-        overdueElement.title =
-            "Outstanding documents with due dates before today.";
-
-    }
-
-
-    const dueThisWeekElement =
-        document.getElementById(
-            "dueThisWeek"
-        );
-
-
-    if (dueThisWeekElement) {
-
-        dueThisWeekElement.title =
-            "Outstanding documents due by the end of this week.";
-
-    }
+margin-bottom:10px;
 
 }
 
+.card p{
 
-// ============================================================
-// LATEST DOCUMENTS LABEL
-// ============================================================
-
-function updateLatestDocumentsLabel(
-    displayedCount,
-    totalCount
-) {
-
-    const table =
-        document.querySelector(
-            "table"
-        );
-
-
-    if (!table) {
-        return;
-    }
-
-
-    table.setAttribute(
-        "aria-label",
-        `Latest ${displayedCount} of ${toNonNegativeNumber(totalCount)} registered documents`
-    );
+color:#555;
 
 }
 
+/* Search */
 
-// ============================================================
-// DASHBOARD LOADING STATE
-// ============================================================
+.search{
 
-function setDashboardLoadingState() {
+margin-top:35px;
 
-    const summaryElementIds = [
-
-        "totalDocuments",
-        "submitted",
-        "approved",
-        "approvedAsCorrected",
-        "reviseResubmit",
-        "draft",
-        "dueThisWeek",
-        "overdue",
-        "totalProjects",
-        "superseded",
-        "cancelled"
-
-    ];
-
-
-    summaryElementIds.forEach(
-        function (elementId) {
-
-            const element =
-                document.getElementById(
-                    elementId
-                );
-
-
-            if (element) {
-
-                element.textContent =
-                    "...";
-
-                element.removeAttribute(
-                    "title"
-                );
-
-            }
-
-        }
-    );
-
-
-    displayTableMessage(
-        "Loading the latest documents..."
-    );
+margin-bottom:30px;
 
 }
 
+.search input{
 
-// ============================================================
-// DASHBOARD SUMMARY ERROR
-// ============================================================
+width:100%;
 
-function setDashboardSummaryError() {
+padding:14px;
 
-    const summaryElementIds = [
+font-size:16px;
 
-        "totalDocuments",
-        "submitted",
-        "approved",
-        "approvedAsCorrected",
-        "reviseResubmit",
-        "draft",
-        "dueThisWeek",
-        "overdue",
-        "totalProjects",
-        "superseded",
-        "cancelled"
+border-radius:8px;
 
-    ];
-
-
-    summaryElementIds.forEach(
-        function (elementId) {
-
-            const element =
-                document.getElementById(
-                    elementId
-                );
-
-
-            if (!element) {
-                return;
-            }
-
-
-            element.textContent =
-                "!";
-
-
-            element.title =
-                "Unable to load this dashboard total.";
-
-        }
-    );
+border:1px solid #ccc;
 
 }
 
+/* Table */
 
-// ============================================================
-// DISPLAY DOCUMENTS
-// ============================================================
+table{
 
-function displayDocuments(documents) {
+width:100%;
 
-    const tbody =
-        document.getElementById(
-            "dashboardTable"
-        );
+background:white;
 
+border-collapse:collapse;
 
-    if (!tbody) {
-        return;
-    }
+border-radius:12px;
 
+overflow:hidden;
 
-    tbody.replaceChildren();
-
-
-    if (
-        !Array.isArray(documents) ||
-        documents.length === 0
-    ) {
-
-        displayTableMessage(
-            "No documents found."
-        );
-
-        return;
-
-    }
-
-
-    const fragment =
-        document.createDocumentFragment();
-
-
-    documents.forEach(
-        function (documentRecord) {
-
-            const document =
-                normalizeDocument(
-                    documentRecord
-                );
-
-
-            const row =
-                document.createElement(
-                    "tr"
-                );
-
-
-            appendTextCell(
-                row,
-                document.docNo
-            );
-
-
-            appendTextCell(
-                row,
-                document.category
-            );
-
-
-            appendTextCell(
-                row,
-                document.projectName
-            );
-
-
-            appendDocumentTitleCell(
-                row,
-                document
-            );
-
-
-            appendStatusCell(
-                row,
-                document.status
-            );
-
-
-            appendDateCell(
-                row,
-                document.uploadedDate ||
-                document.date
-            );
-
-
-            fragment.appendChild(
-                row
-            );
-
-        }
-    );
-
-
-    tbody.appendChild(
-        fragment
-    );
+box-shadow:0 5px 15px rgba(0,0,0,.08);
 
 }
 
+th{
 
-// ============================================================
-// NORMALIZE DOCUMENT
-//
-// Supports lowercase dashboard properties and original
-// capitalized spreadsheet properties.
-// ============================================================
+background:#2563eb;
 
-function normalizeDocument(record) {
+color:white;
 
-    const projectId =
-        getFirstValue(
-            record.project,
-            record.Project
-        );
-
-
-    return {
-
-        docNo:
-            getFirstValue(
-                record.docNo,
-                record.DocNo
-            ),
-
-        category:
-            getFirstValue(
-                record.category,
-                record.Category
-            ),
-
-        trade:
-            getFirstValue(
-                record.trade,
-                record.Trade
-            ),
-
-        title:
-            getFirstValue(
-                record.title,
-                record.Title,
-                record.fileName,
-                record.FileName,
-                "Untitled document"
-            ),
-
-        revision:
-            getFirstValue(
-                record.revision,
-                record.Revision
-            ),
-
-        status:
-            getFirstValue(
-                record.status,
-                record.Status
-            ),
-
-        date:
-            getFirstValue(
-                record.date,
-                record.Date
-            ),
-
-        dueDate:
-            getFirstValue(
-                record.dueDate,
-                record.DueDate
-            ),
-
-        project:
-            projectId,
-
-        projectName:
-            getFirstValue(
-                record.projectName,
-                getProjectDisplayName(
-                    projectId
-                )
-            ),
-
-        fileName:
-            getFirstValue(
-                record.fileName,
-                record.FileName
-            ),
-
-        fileId:
-            getFirstValue(
-                record.fileId,
-                record.FileID
-            ),
-
-        fileLink:
-            getFirstValue(
-                record.fileLink,
-                record.FileLink
-            ),
-
-        uploadedBy:
-            getFirstValue(
-                record.uploadedBy,
-                record.UploadedBy
-            ),
-
-        uploadedDate:
-            getFirstValue(
-                record.uploadedDate,
-                record.UploadedDate
-            )
-
-    };
+padding:15px;
 
 }
 
+td{
 
-// ============================================================
-// DISPLAY TABLE MESSAGE
-// ============================================================
+padding:15px;
 
-function displayTableMessage(message) {
-
-    const tbody =
-        document.getElementById(
-            "dashboardTable"
-        );
-
-
-    if (!tbody) {
-        return;
-    }
-
-
-    tbody.replaceChildren();
-
-
-    const row =
-        document.createElement(
-            "tr"
-        );
-
-
-    const cell =
-        document.createElement(
-            "td"
-        );
-
-
-    // Your dashboard table has six columns.
-    cell.colSpan = 6;
-
-
-    cell.style.textAlign =
-        "center";
-
-
-    cell.style.padding =
-        "25px";
-
-
-    cell.textContent =
-        message;
-
-
-    row.appendChild(
-        cell
-    );
-
-
-    tbody.appendChild(
-        row
-    );
+border-bottom:1px solid #ddd;
 
 }
 
+tr:hover{
 
-// ============================================================
-// APPEND NORMAL TEXT CELL
-// ============================================================
-
-function appendTextCell(
-    row,
-    value
-) {
-
-    const cell =
-        document.createElement(
-            "td"
-        );
-
-
-    cell.textContent =
-        safeText(value);
-
-
-    row.appendChild(
-        cell
-    );
+background:#f3f6fb;
 
 }
 
+</style>
 
-// ============================================================
-// APPEND DOCUMENT TITLE CELL
-// ============================================================
+</head>
 
-function appendDocumentTitleCell(
-    row,
-    documentRecord
-) {
+<body>
 
-    const cell =
-        document.createElement(
-            "td"
-        );
+<div class="sidebar">
 
+<img src="images/logo.png" alt="DEVEX" class="logo">
 
-    const title =
-        safeText(
-            documentRecord.title ||
-            documentRecord.fileName ||
-            "Open document"
-        );
+<ul>
 
+<li>🏠 Dashboard</li>
 
-    const fileUrl =
-        getSafeDriveUrl(
-            documentRecord.fileLink,
-            documentRecord.fileId
-        );
+<li><a href="projects.html" style="color:white;text-decoration:none;">📁 Projects</a></li>
 
+<li>📄 Documents</li>
 
-    if (fileUrl) {
+<li><a href="reports.html" style="color:white;text-decoration:none;">📊 Reports</li>   
 
-        const link =
-            document.createElement(
-                "a"
-            );
+<li>
+    <a href="notifications.html"
+       style="color:white;text-decoration:none;">
+       🔔 Notifications
+    </a>
+</li>    
 
+<li>⚙ Settings</li>
+   
+</ul>
 
-        link.href =
-            fileUrl;
+</div>
 
+<div class="main">
 
-        link.target =
-            "_blank";
+<div class="header">
 
+    <h1>Document Control Dashboard</h1>
 
-        link.rel =
-            "noopener noreferrer";
+    <div class="header-right">
+        <h3 id="welcomeUser"></h3>
+        <button id="logoutBtn">Logout</button>
+    </div>
 
+</div>
 
-        link.textContent =
-            title;
+<div class="cards">
 
+<div class="card">
+    <h2 id="totalDocuments">0</h2>
+    <p>📁 Total Documents</p>
+</div>
 
-        link.title =
-            documentRecord.fileName
-                ? `Open ${documentRecord.fileName}`
-                : "Open document in Google Drive";
+<div class="card">
+    <h2 id="submitted">0</h2>
+    <p>Total Submitted</p>
+</div>
 
+<div class="card">
+    <h2 id="approved">0</h2>
+    <p>Approved</p>
+</div>
 
-        link.style.color =
-            "#2563eb";
+<div class="card">
+    <h2 id="approvedAsCorrected">0</h2>
+    <p>Approved As Corrected</p>
+</div>
 
+<div class="card">
+    <h2 id="reviseResubmit">0</h2>
+    <p>Revise &amp; Resubmit</p>
+</div>
 
-        link.style.textDecoration =
-            "none";
+<div class="card">
+    <h2 id="draft">0</h2>
+    <p>Draft</p>
+</div>
 
+<div class="card">
+    <h2 id="dueThisWeek">0</h2>
+    <p>Due This Week</p>
+</div>
 
-        link.addEventListener(
-            "mouseenter",
-            function () {
+<div class="card">
+    <h2 id="overdue">0</h2>
+    <p>Overdue</p>
+</div>
 
-                link.style.textDecoration =
-                    "underline";
+<div class="card">
+    <h2 id="totalProjects">0</h2>
+    <p>Total Projects</p>
+</div>
 
-            }
-        );
+<div class="card">
+    <h2 id="superseded">0</h2>
+    <p>Superseded</p>
+</div>
 
+<div class="card">
+    <h2 id="cancelled">0</h2>
+    <p>Cancelled</p>
+</div>    
 
-        link.addEventListener(
-            "mouseleave",
-            function () {
+</div>
 
-                link.style.textDecoration =
-                    "none";
+<div class="search">
 
-            }
-        );
+<input type="text" 
+       id="searchInput"
+       placeholder="Search documents by number, title, project, status, trade, or category..."
 
+</div>
 
-        cell.appendChild(
-            link
-        );
+<table>
 
+<thead>
+<tr>
+    <th>Document No.</th>
+    <th>Category</th>
+    <th>Project</th>
+    <th>Title</th>
+    <th>Status</th>
+    <th>Date</th>
 
-    } else {
+</tr>
+</thead>
 
-        cell.textContent =
-            title;
+<tbody id="dashboardTable">
+</tbody>    
 
-    }
+</table>
 
-
-    row.appendChild(
-        cell
-    );
-
-}
-
-
-// ============================================================
-// APPEND STATUS CELL
-// ============================================================
-
-function appendStatusCell(
-    row,
-    status
-) {
-
-    const cell =
-        document.createElement(
-            "td"
-        );
-
-
-    const badge =
-        document.createElement(
-            "span"
-        );
-
-
-    const safeStatus =
-        safeText(status) ||
-        "Unspecified";
-
-
-    badge.textContent =
-        safeStatus;
-
-
-    badge.style.display =
-        "inline-block";
-
-
-    badge.style.padding =
-        "5px 9px";
-
-
-    badge.style.borderRadius =
-        "12px";
-
-
-    badge.style.fontSize =
-        "13px";
-
-
-    badge.style.fontWeight =
-        "600";
-
-
-    const colors =
-        getStatusColors(
-            safeStatus
-        );
-
-
-    badge.style.backgroundColor =
-        colors.background;
-
-
-    badge.style.color =
-        colors.text;
-
-
-    cell.appendChild(
-        badge
-    );
-
-
-    row.appendChild(
-        cell
-    );
-
-}
-
-
-// ============================================================
-// STATUS COLORS
-// ============================================================
-
-function getStatusColors(status) {
-
-    const normalizedStatus =
-        normalizeText(status);
-
-
-    const colorMap = {
-
-        "submitted": {
-
-            background:
-                "#dbeafe",
-
-            text:
-                "#1d4ed8"
-
-        },
-
-        "approved": {
-
-            background:
-                "#dcfce7",
-
-            text:
-                "#166534"
-
-        },
-
-        "approved as corrected": {
-
-            background:
-                "#ecfccb",
-
-            text:
-                "#3f6212"
-
-        },
-
-        "revise & resubmit": {
-
-            background:
-                "#ffedd5",
-
-            text:
-                "#9a3412"
-
-        },
-
-        "draft": {
-
-            background:
-                "#f1f5f9",
-
-            text:
-                "#475569"
-
-        },
-
-        "superseded": {
-
-            background:
-                "#f3e8ff",
-
-            text:
-                "#6b21a8"
-
-        },
-
-        "cancelled": {
-
-            background:
-                "#fee2e2",
-
-            text:
-                "#991b1b"
-
-        }
-
-    };
-
-
-    return colorMap[
-        normalizedStatus
-    ] || {
-
-        background:
-            "#e2e8f0",
-
-        text:
-            "#334155"
-
-    };
-
-}
-
-
-// ============================================================
-// APPEND DATE CELL
-// ============================================================
-
-function appendDateCell(
-    row,
-    value
-) {
-
-    const cell =
-        document.createElement(
-            "td"
-        );
-
-
-    cell.textContent =
-        formatDashboardDate(
-            value
-        );
-
-
-    if (value) {
-
-        const date =
-            new Date(value);
-
-
-        if (
-            !Number.isNaN(
-                date.getTime()
-            )
-        ) {
-
-            cell.title =
-                date.toLocaleString(
-                    DATE_LOCALE
-                );
-
-        }
-
-    }
-
-
-    row.appendChild(
-        cell
-    );
-
-}
-
-
-// ============================================================
-// FORMAT DASHBOARD DATE
-// ============================================================
-
-function formatDashboardDate(value) {
-
-    if (!value) {
-
-        return "";
-
-    }
-
-
-    const date =
-        new Date(value);
-
-
-    if (
-        Number.isNaN(
-            date.getTime()
-        )
-    ) {
-
-        return safeText(value);
-
-    }
-
-
-    return date.toLocaleDateString(
-        DATE_LOCALE,
-        {
-
-            year:
-                "numeric",
-
-            month:
-                "short",
-
-            day:
-                "numeric"
-
-        }
-    );
-
-}
-
-
-// ============================================================
-// SAFE GOOGLE DRIVE URL
-// ============================================================
-
-function getSafeDriveUrl(
-    fileLink,
-    fileId
-) {
-
-    const suppliedLink =
-        safeText(fileLink);
-
-
-    if (
-        suppliedLink &&
-        isAllowedGoogleUrl(
-            suppliedLink
-        )
-    ) {
-
-        return suppliedLink;
-
-    }
-
-
-    const safeFileId =
-        safeText(fileId);
-
-
-    if (
-        safeFileId &&
-        /^[A-Za-z0-9_-]+$/.test(
-            safeFileId
-        )
-    ) {
-
-        return (
-            "https://drive.google.com/file/d/" +
-            encodeURIComponent(
-                safeFileId
-            ) +
-            "/view"
-        );
-
-    }
-
-
-    return "";
-
-}
-
-
-// ============================================================
-// VALIDATE GOOGLE URL
-// ============================================================
-
-function isAllowedGoogleUrl(value) {
-
-    try {
-
-        const url =
-            new URL(value);
-
-
-        if (
-            url.protocol !==
-            "https:"
-        ) {
-
-            return false;
-
-        }
-
-
-        const allowedHosts = [
-
-            "drive.google.com",
-
-            "docs.google.com"
-
-        ];
-
-
-        return allowedHosts.includes(
-            url.hostname.toLowerCase()
-        );
-
-
-    } catch (error) {
-
-        return false;
-
-    }
-
-}
-
-
-// ============================================================
-// PROJECT DISPLAY NAME
-// ============================================================
-
-function getProjectDisplayName(
-    projectId
-) {
-
-    const cleanProjectId =
-        safeText(projectId);
-
-
-    return (
-        PROJECT_NAMES[
-            cleanProjectId
-        ] ||
-        cleanProjectId
-    );
-
-}
-
-
-// ============================================================
-// SEARCH INITIALIZATION
-// ============================================================
-
-function initializeSearch() {
-
-    const searchInput =
-        document.getElementById(
-            "searchInput"
-        );
-
-
-    if (!searchInput) {
-        return;
-    }
-
-
-    searchInput.addEventListener(
-        "input",
-        function () {
-
-            const searchTerm =
-                normalizeText(
-                    this.value
-                );
-
-
-            if (!searchTerm) {
-
-                displayDocuments(
-                    allDocs
-                );
-
-                return;
-
-            }
-
-
-            const results =
-                allDocs.filter(
-                    function (record) {
-
-                        const document =
-                            normalizeDocument(
-                                record
-                            );
-
-
-                        const searchableValues = [
-
-                            document.docNo,
-                            document.category,
-                            document.trade,
-                            document.title,
-                            document.revision,
-                            document.status,
-                            document.project,
-                            document.projectName,
-                            document.fileName,
-                            document.uploadedBy,
-                            formatDashboardDate(
-                                document.date
-                            ),
-                            formatDashboardDate(
-                                document.uploadedDate
-                            )
-
-                        ];
-
-
-                        return searchableValues.some(
-                            function (value) {
-
-                                return normalizeText(
-                                    value
-                                ).includes(
-                                    searchTerm
-                                );
-
-                            }
-                        );
-
-                    }
-                );
-
-
-            console.log(
-                "Search:",
-                searchTerm
-            );
-
-
-            console.log(
-                "Search results:",
-                results.length
-            );
-
-
-            displayDocuments(
-                results
-            );
-
-        }
-    );
-
-}
-
-
-// ============================================================
-// REFRESH WHEN DASHBOARD BECOMES ACTIVE
-//
-// If a user uploads a document on another page and returns by
-// using the browser's back button, the dashboard reloads its
-// data.
-// ============================================================
-
-function initializePageRefresh() {
-
-    window.addEventListener(
-        "pageshow",
-        function (event) {
-
-            if (event.persisted) {
-
-                loadDashboard();
-
-            }
-
-        }
-    );
-
-}
-
-
-// ============================================================
-// SET ELEMENT TEXT
-// ============================================================
-
-function setText(
-    elementId,
-    value
-) {
-
-    const element =
-        document.getElementById(
-            elementId
-        );
-
-
-    if (!element) {
-        return;
-    }
-
-
-    element.textContent =
-        String(
-            toNonNegativeNumber(value)
-        );
-
-}
-
-
-// ============================================================
-// SAFE TEXT
-// ============================================================
-
-function safeText(value) {
-
-    if (
-        value === null ||
-        typeof value === "undefined"
-    ) {
-
-        return "";
-
-    }
-
-
-    return String(value).trim();
-
-}
-
-
-// ============================================================
-// NORMALIZE TEXT
-// ============================================================
-
-function normalizeText(value) {
-
-    return safeText(value)
-        .toLowerCase()
-        .replace(
-            /\s+/g,
-            " "
-        );
-
-}
-
-
-// ============================================================
-// FIRST NON-EMPTY VALUE
-// ============================================================
-
-function getFirstValue() {
-
-    for (
-        let index = 0;
-        index < arguments.length;
-        index++
-    ) {
-
-        const value =
-            arguments[index];
-
-
-        if (
-            value !== null &&
-            typeof value !== "undefined" &&
-            String(value).trim() !== ""
-        ) {
-
-            return value;
-
-        }
-
-    }
-
-
-    return "";
-
-}
-
-
-// ============================================================
-// NON-NEGATIVE NUMBER
-// ============================================================
-
-function toNonNegativeNumber(value) {
-
-    const number =
-        Number(value);
-
-
-    if (
-        !Number.isFinite(number) ||
-        number < 0
-    ) {
-
-        return 0;
-
-    }
-
-
-    return Math.floor(number);
-
-}
-
-
-// ============================================================
-// INITIALIZE
-// ============================================================
-
-document.addEventListener(
-    "DOMContentLoaded",
-    function () {
-
-        initializeCurrentUser();
-
-        initializeLogoutButton();
-
-        initializeSearch();
-
-        initializePageRefresh();
-
-        loadDashboard();
-
-    }
-);
+</div>
+    
+<script src="js/auth.js"></script>    
+<script src="js/dashboard.js"></script>
+  
+</body>
+</html>    
