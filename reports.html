@@ -1,146 +1,608 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <title>Reports Register</title>
-  <link rel="stylesheet" href="css/style.css">
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Reports | DEVEX Document Portal</title>
+
+<a href="projects.html">⬅ Back to Projects</a>
+    
+<style>
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Segoe UI", Arial, sans-serif;
+}
+
+body {
+    background: #edf2f7;
+    color: #1f2937;
+}
+
+/* HEADER */
+
+.header {
+    background: #1f2937;
+    color: white;
+    padding: 16px 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header h1 {
+    font-size: 21px;
+}
+
+.header span {
+    font-size: 14px;
+    opacity: 0.85;
+}
+
+/* CONTAINER */
+
+.container {
+    max-width: 1400px;
+    margin: 25px auto;
+    padding: 0 20px;
+}
+
+/* PAGE TITLE */
+
+.page-title {
+    margin-bottom: 20px;
+}
+
+.page-title h2 {
+    font-size: 25px;
+    margin-bottom: 5px;
+}
+
+.page-title p {
+    color: #6b7280;
+    font-size: 14px;
+}
+
+/* CARD */
+
+.card {
+    background: white;
+    border-radius: 10px;
+    padding: 22px;
+    margin-bottom: 22px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.card h3 {
+    font-size: 18px;
+    margin-bottom: 18px;
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 10px;
+}
+
+/* FORM */
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 17px 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group.full {
+    grid-column: 1 / -1;
+}
+
+label {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #374151;
+}
+
+input,
+select,
+textarea {
+    width: 100%;
+    padding: 10px 11px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    background: white;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    outline: none;
+    border-color: #2563eb;
+}
+
+textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+/* FILE */
+
+.file-box {
+    border: 2px dashed #cbd5e1;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    background: #f8fafc;
+}
+
+.file-box:hover {
+    border-color: #2563eb;
+}
+
+.file-box input {
+    border: none;
+    padding: 0;
+}
+
+/* BUTTONS */
+
+.button-row {
+    margin-top: 20px;
+    display: flex;
+    gap: 10px;
+}
+
+button {
+    border: none;
+    padding: 10px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.btn-upload {
+    background: #2563eb;
+    color: white;
+}
+
+.btn-upload:hover {
+    background: #1d4ed8;
+}
+
+.btn-clear {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.btn-clear:hover {
+    background: #d1d5db;
+}
+
+/* STATUS */
+
+#uploadStatus {
+    margin-top: 15px;
+    font-size: 14px;
+    display: none;
+    padding: 10px;
+    border-radius: 6px;
+}
+
+/* TABLE */
+
+.table-wrapper {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+th {
+    background: #f3f4f6;
+    text-align: left;
+    padding: 11px;
+    border-bottom: 2px solid #d1d5db;
+    white-space: nowrap;
+}
+
+td {
+    padding: 11px;
+    border-bottom: 1px solid #e5e7eb;
+    white-space: nowrap;
+}
+
+tr:hover {
+    background: #f9fafb;
+}
+
+.view-link {
+    color: #2563eb;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.view-link:hover {
+    text-decoration: underline;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 800px) {
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-group.full {
+        grid-column: auto;
+    }
+
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+
+}
+
+</style>
+
 </head>
+
 <body>
 
-   <!-- Shared navigation -->
-  <nav class="navbar">
-    <ul>
-      <li><a href="dashboard.html">Dashboard</a></li>
-      <li><a href="projects.html">Projects</a></li>
-      <li><a href="reports.html">Reports</a></li>
-      <li><a href="billings.html">Billing</a></li>
-      <li><a href="notifications.html">Notifications</a></li>
-    </ul>
-  </nav>
+<!-- HEADER -->
 
-<header>
-  <h2 id="projectTitle">📄 Project Reports</h2>
-  <a href="projects.html">⬅ Back to Projects</a>
-</header>
+<div class="header">
 
-<div class="toolbar">
-  <input type="text" id="searchBox" placeholder="Search reports...">
+    <h1>DEVEX Document Portal</h1>
 
-   <select id="projectFilter">
-    <option value="">All Project</option>
-    <option value="22-Storey">22-Storey</option>
-    <option value="GCSJ">GCSJ</option>
-    <option value="DOH">DOH</option>
-    <option value="Evacuation">Evacuation</option>
-    <option value="CSJ">CSJ</option>
-  </select>
-  
-  <select id="categoryFilter">
-    <option value="">All Categories</option>
-    <option value="Site Safety Incident Reports">Site Safety Incident Reports</option>
-    <option value="Site Safety Observation Reports">Site Safety Observation Reports</option>
-    <option value="Safety Corrective Action Reports">Safety Corrective Action Reports</option>
-    <option value="Quality Control Reports">Quality Control Reports</option>
-    <option value="Production Reports">Production Reports</option>
-  </select>
+    <span>Reports Management</span>
 
-  <select id="tradeFilter">
-    <option value="">All Trades</option>
-    <option value="Operations">Operations</option>
-    <option value="Quality Control">Quality Control</option>
-    <option value="Safety">Safety</option>
-  </select>
-
-  <select id="statusFilter">
-    <option value="">All Statuses</option>
-    <option value="Master Copy">Master Copy</option>
-    <option value="Draft">Draft</option>
-    <option value="Controlled Copy">Controlled Copy</option>
-    <option value="Incomplete">Incomplete</option>
-  </select>
 </div>
 
-<p id="recordCount"></p>
 
-<div class="table-container">
-  <table>
-    <thead>
-      <tr>
-        <th>Report No.</th>
-        <th>Document Title</th>
-        <th>Project</th>
-        <th>Category</th>
-        <th>Trade</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody id="tableBody"></tbody>
-  </table>
+<div class="container">
+
+    <!-- PAGE TITLE -->
+
+    <div class="page-title">
+
+        <h2>Reports Upload</h2>
+
+        <p>Upload and manage project reports and records.</p>
+
+    </div>
+
+
+    <!-- UPLOAD FORM -->
+
+    <div class="card">
+
+        <h3>Upload Report</h3>
+
+        <form id="reportForm">
+
+            <div class="form-grid">
+
+                <!-- REPORT CATEGORY -->
+
+                <div class="form-group">
+
+                    <label for="category">
+                        Report Category *
+                    </label>
+
+                    <select id="category" required>
+
+                        <option value="">Select Category</option>
+
+                        <option value="Daily Report">
+                            Daily Report
+                        </option>
+
+                        <option value="Weekly Report">
+                            Weekly Report
+                        </option>
+
+                        <option value="Monthly Report">
+                            Monthly Report
+                        </option>
+
+                        <option value="Progress Report">
+                            Progress Report
+                        </option>
+
+                        <option value="S-Curve">
+                            S-Curve
+                        </option>
+
+                        <option value="3 Weeks Look Ahead">
+                            3 Weeks Look Ahead
+                        </option>
+
+                        <option value="QA/QC Report">
+                            QA/QC Report
+                        </option>
+
+                        <option value="Safety Report">
+                            Safety Report
+                        </option>
+
+                        <option value="Other">
+                            Other
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- REPORT NUMBER -->
+
+                <div class="form-group">
+
+                    <label for="reportNo">
+                        Report No. *
+                    </label>
+
+                    <input
+                        type="text"
+                        id="reportNo"
+                        placeholder="Example: RPT-001"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- REPORT TITLE -->
+
+                <div class="form-group full">
+
+                    <label for="title">
+                        Report Title *
+                    </label>
+
+                    <input
+                        type="text"
+                        id="title"
+                        placeholder="Enter report title"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- PROJECT -->
+
+                <div class="form-group">
+
+                    <label for="project">
+                        Project *
+                    </label>
+
+                    <input
+                        type="text"
+                        id="project"
+                        placeholder="Enter project name"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- REPORTING PERIOD -->
+
+                <div class="form-group">
+
+                    <label for="period">
+                        Reporting Period
+                    </label>
+
+                    <input
+                        type="text"
+                        id="period"
+                        placeholder="Example: August 17–21, 2026"
+                    >
+
+                </div>
+
+
+                <!-- REPORT DATE -->
+
+                <div class="form-group">
+
+                    <label for="reportDate">
+                        Report Date *
+                    </label>
+
+                    <input
+                        type="date"
+                        id="reportDate"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- PREPARED BY -->
+
+                <div class="form-group">
+
+                    <label for="preparedBy">
+                        Prepared By *
+                    </label>
+
+                    <input
+                        type="text"
+                        id="preparedBy"
+                        placeholder="Name of preparer"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- DEPARTMENT -->
+
+                <div class="form-group">
+
+                    <label for="department">
+                        Department / Trade
+                    </label>
+
+                    <input
+                        type="text"
+                        id="department"
+                        placeholder="Example: Civil / QAQC / Safety"
+                    >
+
+                </div>
+
+
+                <!-- REMARKS -->
+
+                <div class="form-group full">
+
+                    <label for="remarks">
+                        Remarks
+                    </label>
+
+                    <textarea
+                        id="remarks"
+                        placeholder="Additional remarks..."
+                    ></textarea>
+
+                </div>
+
+
+                <!-- FILE -->
+
+                <div class="form-group full">
+
+                    <label for="reportFile">
+                        Report File *
+                    </label>
+
+                    <div class="file-box">
+
+                        <input
+                            type="file"
+                            id="reportFile"
+                            required
+                        >
+
+                        <p style="margin-top:8px;font-size:12px;color:#6b7280;">
+                            PDF, Excel, Word and other project report files
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- BUTTONS -->
+
+            <div class="button-row">
+
+                <button
+                    type="submit"
+                    class="btn-upload"
+                >
+                    Upload Report
+                </button>
+
+                <button
+                    type="button"
+                    class="btn-clear"
+                    id="clearButton"
+                >
+                    Clear
+                </button>
+
+            </div>
+
+
+            <!-- STATUS -->
+
+            <div id="uploadStatus"></div>
+
+        </form>
+
+    </div>
+
+
+    <!-- REPORT REGISTER -->
+
+    </div>
+
+<div class="search">
+
+<input type="text" 
+       id="searchInput"
+       placeholder="Search report by number, title, project, department, or category..."
+
+</div>
+    
+    <div class="card">
+
+        <h3>Report Register</h3>
+
+        <div class="table-wrapper">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>Report No.</th>
+                        <th>Category</th>
+                        <th>Title</th>
+                        <th>Project</th>
+                        <th>Reporting Period</th>
+                        <th>Report Date</th>
+                        <th>Prepared By</th>
+                        <th>Department</th>
+                        <th>Uploaded</th>
+                        <th>File</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody id="reportTableBody">
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
 </div>
 
-<script>
-let reports = [];
 
-function displayReports(list) {
-  const tbody = document.getElementById("tableBody");
-  tbody.innerHTML = "";
-  list.forEach(rep => {
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${rep.reportNo}</td>
-      <td>${rep.project}</td>
-      <td>${rep.title}</td>
-      <td>${rep.category}</td>
-      <td>${rep.trade}</td>
-      <td>${rep.status}</td>
-      <a href="${doc.file}" target="_blank" class="view-btn">View</a>
-          </td>
-    `;
-    tbody.appendChild(row);
-  });
-  document.getElementById("recordCount").textContent =
-    `Showing ${list.length} of ${reports.length} reports`;
-}
-
-function filterReports() {
-  const keyword = searchBox.value.toLowerCase();
-  const cat = categoryFilter.value;
-  const trade = tradeFilter.value;
-  const status = statusFilter.value;
-
-  const filtered = reports.filter(rep => {
-    return (
-      (keyword === "" || rep.title.toLowerCase().includes(keyword) || rep.reportNo.toLowerCase().includes(keyword)) &&
-      (proj === "" || rep.project === proj) &&
-      (cat === "" || rep.category === cat) &&
-      (trade === "" || rep.trade === trade) &&
-      (status === "" || rep.status === status)
-    );
-  });
-
-  displayReports(filtered);
-}
-
-const searchBox = document.getElementById("searchBox");
-const projectFilter = document.getElementById("projectFilter");  
-const categoryFilter = document.getElementById("categoryFilter");
-const tradeFilter = document.getElementById("tradeFilter");
-const statusFilter = document.getElementById("statusFilter");
-
-searchBox.addEventListener("keyup", filterReports);
-categoryFilter.addEventListener("change", filterReports);
-tradeFilter.addEventListener("change", filterReports);
-statusFilter.addEventListener("change", filterReports);
-
-// Example: load from JSON file
-fetch("data/reports.json")
-  .then(res => res.json())
-  .then(data => {
-    reports = data;
-    displayReports(reports);
-  })
-  .catch(err => console.error("Error loading reports:", err));
-</script>
+<script src="js/reports.js"></script>
 
 </body>
+
 </html>
+```
+
