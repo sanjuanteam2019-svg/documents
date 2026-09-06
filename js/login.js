@@ -19,9 +19,9 @@ const users = [
     },
     {
         username: "jon",
-        password: "12345",
-        fullname: "Jon Alex",
-        role: "Operations Manager"
+        password: "00000",
+        fullname: "Jon Morcon",
+        role: "Document Controller"
     },
     {
         username: "john",
@@ -30,10 +30,10 @@ const users = [
         role: "Document Controller"
     },
     {
-        username: "Ken",
+        username: "Tyrone",
         password: "12345",
-        fullname: "Kenneth Navarro",
-        role: "QAQC Engineer"
+        fullname: "Tyrone Dhan Tomalon",
+        role: "Documentation Manager"
     }
 ];
 
