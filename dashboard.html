@@ -28,7 +28,7 @@ background:#edf2f7;
 .sidebar{
 
 width:240px;
-height:100vh;
+height:140vh;
 background:#0f172a;
 color:white;
 padding:20px;
@@ -39,7 +39,7 @@ padding:20px;
 
 margin-bottom:40px;
 text-align:center;
-font-size:22px;
+font-size:18px;
 
 }
 
@@ -204,7 +204,7 @@ background:#f3f6fb;
 
 <div class="sidebar">
 
-<img src="images/logo.png" alt="DEVEX" class="logo">
+<img src="images/sichuan.png" alt="SYCPC" class="logo">
 
 <ul>
 
@@ -214,14 +214,19 @@ background:#f3f6fb;
 
 <li>📄 Documents</li>
 
-<li><a href="submittals.html" style="color:white;text-decoration:none;">📄 Submittals</a></li>        
+<li><a href="reports.html" style="color:white;text-decoration:none;">📊 Reports</li>
 
-<li><a href="billings.html" style="color:white;text-decoration:none;">📄 Billings</a></li>    
+<li>📃 Forms</li>    
 
-<li><a href="reports.html" style="color:white;text-decoration:none;">📊 Reports</a></li>
+<li>
+    <a href="notifications.html"
+       style="color:white;text-decoration:none;">
+       🔔 Notifications
+    </a>
+</li>    
 
 <li>⚙ Settings</li>
-
+   
 </ul>
 
 </div>
@@ -230,9 +235,12 @@ background:#f3f6fb;
 
 <div class="header">
 
-<h1>Document Control Dashboard</h1>
+    <h1>Document Control Dashboard</h1>
 
-<h3>Welcome John</h3>
+    <div class="header-right">
+        <h3 id="welcomeUser"></h3>
+        <button id="logoutBtn">Logout</button>
+    </div>
 
 </div>
 
@@ -297,7 +305,9 @@ background:#f3f6fb;
 
 <div class="search">
 
-<input type="text" id="searchBox" placeholder="Search document number...">
+<input type="text" 
+       id="searchInput"
+       placeholder="Search documents by number, title, project, status, trade, or category..."
 
 </div>
 
@@ -306,6 +316,7 @@ background:#f3f6fb;
 <thead>
 <tr>
     <th>Document No.</th>
+    <th>Category</th>
     <th>Project</th>
     <th>Title</th>
     <th>Status</th>
@@ -320,8 +331,9 @@ background:#f3f6fb;
 </table>
 
 </div>
-
+    
+<script src="js/auth.js"></script>    
 <script src="js/dashboard.js"></script>
-
+  
 </body>
 </html>    
