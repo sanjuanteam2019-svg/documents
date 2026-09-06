@@ -2,7 +2,9 @@
 <html lang="en">
 
 <head>
+
     <meta charset="UTF-8">
+
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0">
 
@@ -11,9 +13,447 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <link rel="stylesheet" href="css/style.css">
+
+    <style>
+
+        /* =========================================================
+           UPLOAD BUTTON
+        ========================================================= */
+
+        .upload-btn {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .upload-btn:hover {
+            background: #1d4ed8;
+        }
+
+
+        /* =========================================================
+           HEADER ACTIONS
+        ========================================================= */
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-actions a {
+            text-decoration: none;
+        }
+
+
+        /* =========================================================
+           UPLOAD MODAL
+        ========================================================= */
+
+        .upload-modal {
+            display: none;
+
+            position: fixed;
+
+            z-index: 9999;
+
+            left: 0;
+            top: 0;
+
+            width: 100%;
+            height: 100%;
+
+            background: rgba(15, 23, 42, 0.55);
+
+            align-items: center;
+            justify-content: center;
+
+            padding: 20px;
+        }
+
+
+        .upload-modal.show {
+            display: flex;
+        }
+
+
+        .upload-modal-content {
+
+            background: white;
+
+            width: 100%;
+            max-width: 850px;
+
+            max-height: 90vh;
+
+            overflow-y: auto;
+
+            border-radius: 12px;
+
+            box-shadow:
+                0 20px 50px rgba(0, 0, 0, 0.25);
+
+            padding: 25px;
+        }
+
+
+        .upload-modal-header {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            margin-bottom: 20px;
+
+            border-bottom: 1px solid #e5e7eb;
+
+            padding-bottom: 15px;
+        }
+
+
+        .upload-modal-header h2 {
+
+            margin: 0;
+
+            color: #1e293b;
+
+            font-size: 21px;
+        }
+
+
+        .close-upload {
+
+            border: none;
+
+            background: transparent;
+
+            font-size: 28px;
+
+            color: #64748b;
+
+            cursor: pointer;
+
+            line-height: 1;
+        }
+
+
+        .close-upload:hover {
+
+            color: #dc2626;
+
+        }
+
+
+        /* =========================================================
+           FORM
+        ========================================================= */
+
+        .upload-form {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(2, minmax(0, 1fr));
+
+            gap: 15px;
+        }
+
+
+        .form-group {
+
+            display: flex;
+
+            flex-direction: column;
+
+        }
+
+
+        .form-group.full-width {
+
+            grid-column: 1 / -1;
+
+        }
+
+
+        .form-group label {
+
+            font-size: 13px;
+
+            font-weight: 600;
+
+            color: #334155;
+
+            margin-bottom: 6px;
+
+        }
+
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+
+            width: 100%;
+
+            padding: 10px 11px;
+
+            border: 1px solid #cbd5e1;
+
+            border-radius: 6px;
+
+            font-family: inherit;
+
+            font-size: 14px;
+
+            box-sizing: border-box;
+
+            background: white;
+
+        }
+
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+
+            outline: none;
+
+            border-color: #2563eb;
+
+            box-shadow:
+                0 0 0 2px rgba(37, 99, 235, 0.12);
+
+        }
+
+
+        .form-group textarea {
+
+            min-height: 90px;
+
+            resize: vertical;
+
+        }
+
+
+        .form-group input[readonly] {
+
+            background: #f1f5f9;
+
+            color: #475569;
+
+        }
+
+
+        /* =========================================================
+           FILE INPUT
+        ========================================================= */
+
+        .file-input {
+
+            padding: 8px !important;
+
+            background: #f8fafc !important;
+
+        }
+
+
+        .file-info {
+
+            margin-top: 6px;
+
+            font-size: 12px;
+
+            color: #64748b;
+
+        }
+
+
+        /* =========================================================
+           MODAL ACTIONS
+        ========================================================= */
+
+        .upload-form-actions {
+
+            grid-column: 1 / -1;
+
+            display: flex;
+
+            justify-content: flex-end;
+
+            gap: 10px;
+
+            margin-top: 10px;
+
+            padding-top: 18px;
+
+            border-top: 1px solid #e5e7eb;
+        }
+
+
+        .cancel-upload-btn,
+        .submit-upload-btn {
+
+            border: none;
+
+            padding: 10px 20px;
+
+            border-radius: 6px;
+
+            font-size: 14px;
+
+            font-weight: 600;
+
+            cursor: pointer;
+        }
+
+
+        .cancel-upload-btn {
+
+            background: #e2e8f0;
+
+            color: #334155;
+        }
+
+
+        .cancel-upload-btn:hover {
+
+            background: #cbd5e1;
+
+        }
+
+
+        .submit-upload-btn {
+
+            background: #16a34a;
+
+            color: white;
+        }
+
+
+        .submit-upload-btn:hover {
+
+            background: #15803d;
+
+        }
+
+
+        .submit-upload-btn:disabled {
+
+            background: #94a3b8;
+
+            cursor: not-allowed;
+
+        }
+
+
+        /* =========================================================
+           UPLOAD MESSAGE
+        ========================================================= */
+
+        .upload-message {
+
+            grid-column: 1 / -1;
+
+            display: none;
+
+            padding: 10px 12px;
+
+            border-radius: 6px;
+
+            font-size: 13px;
+
+        }
+
+
+        .upload-message.success {
+
+            display: block;
+
+            background: #dcfce7;
+
+            color: #166534;
+
+            border: 1px solid #86efac;
+
+        }
+
+
+        .upload-message.error {
+
+            display: block;
+
+            background: #fee2e2;
+
+            color: #991b1b;
+
+            border: 1px solid #fca5a5;
+
+        }
+
+
+        /* =========================================================
+           RESPONSIVE
+        ========================================================= */
+
+        @media (max-width: 700px) {
+
+            .upload-form {
+
+                grid-template-columns: 1fr;
+
+            }
+
+            .form-group.full-width {
+
+                grid-column: auto;
+
+            }
+
+            .upload-form-actions {
+
+                grid-column: auto;
+
+                flex-direction: column;
+
+            }
+
+            .cancel-upload-btn,
+            .submit-upload-btn {
+
+                width: 100%;
+
+            }
+
+            .header-actions {
+
+                flex-direction: column;
+
+                align-items: flex-end;
+
+                gap: 8px;
+
+            }
+
+        }
+
+    </style>
+
 </head>
 
+
 <body>
+
+
+<!-- =========================================================
+     STATUS CHART
+========================================================= -->
 
 <div class="chart-card">
 
@@ -23,537 +463,906 @@
 
 </div>
 
-<header>
-    <h2 id="projectTitle">📄 projectNames</h2>
 
-    <a href="projects.html">⬅ Back to Projects</a>
+<!-- =========================================================
+     HEADER
+========================================================= -->
+
+<header>
+
+    <h2 id="projectTitle">
+        📄 projectNames
+    </h2>
+
+
+    <div class="header-actions">
+
+        <button
+            type="button"
+            class="upload-btn"
+            id="openUploadBtn">
+
+            ＋ Upload Document
+
+        </button>
+
+
+        <a href="projects.html">
+            ⬅ Back to Projects
+        </a>
+
+    </div>
+
 </header>
+
+
+<!-- =========================================================
+     DASHBOARD
+========================================================= -->
 
 <div class="dashboard">
 
+
     <div class="card">
+
         <h3>Total Documents</h3>
+
         <h1 id="totalDocs">0</h1>
+
     </div>
+
 
     <div class="card approved">
+
         <h3>Approved</h3>
+
         <h1 id="approvedDocs">0</h1>
+
     </div>
+
 
     <div class="card approved-as-corrected">
+
         <h3>Approved As Corrected</h3>
+
         <h1 id="approvedAsCorrectedDocs">0</h1>
+
     </div>
+
 
     <div class="card reviseResubmit">
+
         <h3>Revise & Resubmit</h3>
+
         <h1 id="reviseResubmitDocs">0</h1>
+
     </div>
-    
+
+
     <div class="card submitted">
+
         <h3>Submitted</h3>
+
         <h1 id="submittedDocs">0</h1>
+
     </div>
+
 
     <div class="card draft">
+
         <h3>Draft</h3>
+
         <h1 id="draftDocs">0</h1>
+
     </div>
 
-     <div class="card transmitted">
-        <h3>Transmitted</h3>
-        <h1 id="transmittedDocs">0</h1>
-    </div>
 
     <div class="card cancelled">
+
         <h3>Cancelled</h3>
+
         <h1 id="cancelledDocs">0</h1>
+
     </div>
+
 
     <div class="card superseded">
+
         <h3>Superseded</h3>
+
         <h1 id="supersededDocs">0</h1>
+
     </div>
 
+
     <div class="card overdue">
-    <h3>Overdue</h3>
-    <h1 id="overdueDocs">0</h1>
-</div>
+
+        <h3>Overdue</h3>
+
+        <h1 id="overdueDocs">0</h1>
+
+    </div>
+
 
 </div>
+
+
+<!-- =========================================================
+     DOCUMENT REGISTER
+========================================================= -->
 
 <div class="container">
 
+
+    <!-- =====================================================
+         TOOLBAR
+    ====================================================== -->
+
     <div class="toolbar">
+
 
         <input
             type="text"
             id="searchBox"
             placeholder="Search documents...">
 
+
         <select id="statusFilter">
 
-            <option value="">All Status</option>
-            <option value="Approved">Approved</option>
-            <option value="Approved As Corrected">Approved As Corrected</option>
-            <option value="Revise & Resubmit">Revise & Resubmit</option>
-            <option value="Submitted">Submitted</option>
-            <option value="Draft">Draft</option>
-            <option value="transmitted">Transmitted</option>
-            <option value="cancelled">Cancelled</option>
-            <option value="Superseded">Superseded</option>
-            <option value="Overdue">Overdue</option>
+            <option value="">
+                All Status
+            </option>
+
+            <option value="Approved">
+                Approved
+            </option>
+
+            <option value="Approved As Corrected">
+                Approved As Corrected
+            </option>
+
+            <option value="Revise & Resubmit">
+                Revise & Resubmit
+            </option>
+
+            <option value="Submitted">
+                Submitted
+            </option>
+
+            <option value="Draft">
+                Draft
+            </option>
+
+            <option value="Cancelled">
+                Cancelled
+            </option>
+
+            <option value="Superseded">
+                Superseded
+            </option>
+
+            <option value="Overdue">
+                Overdue
+            </option>
 
         </select>
 
+
         <select id="categoryFilter">
 
-    <option value="">All Categories</option>
-    <option value="RFA">RFA</option>
-    <option value="RFI">RFI</option>
-    <option value="MAR">MAR</option>
-    <option value="CVI">CVI</option>       
-    <option value="Safety">Safety</option>
-    <option value="Letter">Letter</option>
-    <option value="Transmittal">Transmittal</option>        
-    <option value="Billings">Billings</option>
-         </select>
+            <option value="">
+                All Categories
+            </option>
 
-         <select id="tradeFilter">
-    <option value="">All Trades</option>
-    <option value="Architectural">Architectural</option>
-    <option value="Civil">Civil</option>
-    <option value="Structural">Structural</option>
-    <option value="Electrical">Electrical</option>
-    <option value="Mechanical">Mechanical</option>
-    <option value="Plumbing">Plumbing</option>
-    <option value="Safety">Safety</option>
-    <option value="Billings">Billings</option>         
-</select>
+            <option value="RFA">
+                RFA
+            </option>
 
-<select id="sortFilter">
-    <option value="">Sort By</option>
-    <option value="date-desc">Newest Date</option>
-    <option value="date-asc">Oldest Date</option>
-    <option value="doc-asc">Document No. (A-Z)</option>
-    <option value="doc-desc">Document No. (Z-A)</option>
-    <option value="title-asc">Title (A-Z)</option>
-    <option value="title-desc">Title (Z-A)</option>
-    
-</select>
+            <option value="RFI">
+                RFI
+            </option>
+
+            <option value="MAR">
+                MAR
+            </option>
+
+            <option value="CVI">
+                CVI
+            </option>
+
+            <option value="NTP">
+                NTP
+            </option>
+
+            <option value="Drawings">
+                Drawings
+            </option>
+
+            <option value="Method Statement">
+                Method Statement
+            </option>
+
+            <option value="Materials">
+                Materials
+            </option>
+
+            <option value="Submittals">
+                Submittals
+            </option>
+
+            <option value="Transmittals">
+                Transmittals
+            </option>
+
+            <option value="Letters">
+                Letters
+            </option>
+
+            <option value="Safety">
+                Safety
+            </option>
+
+            <option value="Other">
+                Other
+            </option>
+
+        </select>
+
+
+        <select id="tradeFilter">
+
+            <option value="">
+                All Trades
+            </option>
+
+            <option value="Architectural">
+                Architectural
+            </option>
+
+            <option value="Civil">
+                Civil
+            </option>
+
+            <option value="Structural">
+                Structural
+            </option>
+
+            <option value="Electrical">
+                Electrical
+            </option>
+
+            <option value="Mechanical">
+                Mechanical
+            </option>
+
+            <option value="Plumbing">
+                Plumbing
+            </option>
+
+            <option value="Safety">
+                Safety
+            </option>
+
+        </select>
+
+
+        <select id="sortFilter">
+
+            <option value="">
+                Sort By
+            </option>
+
+            <option value="date-desc">
+                Newest Date
+            </option>
+
+            <option value="date-asc">
+                Oldest Date
+            </option>
+
+            <option value="doc-asc">
+                Document No. (A-Z)
+            </option>
+
+            <option value="doc-desc">
+                Document No. (Z-A)
+            </option>
+
+            <option value="title-asc">
+                Title (A-Z)
+            </option>
+
+            <option value="title-desc">
+                Title (Z-A)
+            </option>
+
+            <option value="dueDate-asc">
+                Due Date
+            </option>
+
+        </select>
+
 
     </div>
 
+
+    <!-- =====================================================
+         RECORD COUNT
+    ====================================================== -->
+
     <p id="recordCount"></p>
+
+
+    <!-- =====================================================
+         DOCUMENT TABLE
+    ====================================================== -->
 
     <div class="table-container">
 
-    <table id="docTable">
+        <table id="docTable">
 
-        <thead>
+            <thead>
 
-            <tr>
-                <th>Document No.</th>
-                <th>Category</th>
-                <th>Trade</th>
-                <th>Title</th>
-                <th>Revision</th>
-                <th>Status</th>
-                <th>Date</th>
-                <th>File</th>
-            </tr>
+                <tr>
 
-        </thead>
+                    <th>
+                        Doc No.
+                    </th>
 
-        <tbody id="tableBody">
-        </tbody>
+                    <th>
+                        Category
+                    </th>
 
-    </table>
+                    <th>
+                        Trade
+                    </th>
+
+                    <th>
+                        Title
+                    </th>
+
+                    <th>
+                        Revision
+                    </th>
+
+                    <th>
+                        Status
+                    </th>
+
+                    <th>
+                        Date
+                    </th>
+
+                    <th>
+                        Due Date
+                    </th>
+
+                    <th>
+                        Ball in Court
+                    </th>
+
+                    <th>
+                        File
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody id="tableBody">
+            </tbody>
+
+        </table>
+
+    </div>
+
 
 </div>
 
-<script>
 
-let documents = [];
+<!-- =========================================================
+     UPLOAD DOCUMENT MODAL
+========================================================= -->
 
-let statusChart;
+<div
+    class="upload-modal"
+    id="uploadModal">
 
-const params = new URLSearchParams(window.location.search);
-const project = params.get("project");
 
-if (!project) {
+    <div class="upload-modal-content">
 
-    alert("No project selected.");
 
-    window.location.href = "projects.html";
+        <!-- =================================================
+             MODAL HEADER
+        ================================================== -->
 
-}
-const projectNames = {
-    "government-center": "Government Center Project",
-    "22-storey-multipurpose-building": "22-Storey Multipurpose Building",
-    "school-cluster3": "School Cluster 3",
-    "medical-center": "Medical Center",
-    "evacuation-center": "San Juan Evacuation Center",
-    "crematorium": "San Juan Crematorium"
-};
-document.getElementById("projectTitle").innerHTML =
-    "📄 " + (projectNames[project] || "Document Register");
+        <div class="upload-modal-header">
 
-    fetch(`data/${project}.json`)
-.then(response => {
+            <h2>
+                Upload Project Document
+            </h2>
 
-    if (!response.ok) {
 
-        throw new Error("Project database not found.");
+            <button
+                type="button"
+                class="close-upload"
+                id="closeUploadBtn"
+                aria-label="Close">
 
-    }
+                ×
 
-    return response.json();
+            </button>
 
-})
-.then(data => {
+        </div>
 
-    documents = data;
 
-updateDashboard();
+        <!-- =================================================
+             UPLOAD FORM
+        ================================================== -->
 
-function updateChart(){
+        <form
+            class="upload-form"
+            id="uploadForm">
 
-    const approved =
-        documents.filter(d=>d.status==="Approved").length;
 
-    const approvedAsCorrected =
-        documents.filter(d=>d.status==="Approved As Corrected").length;
+            <!-- PROJECT -->
 
-    const reviseResubmit =
-        documents.filter(d=>d.status==="Revise & Resubmit").length;
+            <div class="form-group">
 
-    const submitted =
-        documents.filter(d=>d.status==="Submitted").length;
+                <label for="uploadProject">
+                    Project
+                </label>
 
-    const draft =
-        documents.filter(d=>d.status==="Draft").length;
+                <input
+                    type="text"
+                    id="uploadProject"
+                    name="project"
+                    readonly>
 
-    const transmitted =
-        documents.filter(d=>d.status==="Transmitted").length;
+            </div>
 
-    const cancelled =
-        documents.filter(d=>d.status==="Cancelled").length;
 
-    const superseded =
-        documents.filter(d=>d.status==="Superseded").length;
+            <!-- DOCUMENT NUMBER -->
 
-    const overdue =
-    documents.filter(doc =>doc.status==="Submitted" &&
-        doc.dueDate &&
-        new Date() > new Date(doc.dueDate)
-    ).length;
+            <div class="form-group">
 
-    if(statusChart){
+                <label for="uploadDocNo">
+                    Doc No.
+                </label>
 
-        statusChart.destroy();
+                <input
+                    type="text"
+                    id="uploadDocNo"
+                    name="docNo"
+                    placeholder="Enter document number"
+                    required>
 
-    }
+            </div>
 
-    const ctx =
-        document.getElementById("statusChart");
 
-    statusChart = new Chart(ctx,{
+            <!-- CATEGORY -->
 
-        type:"doughnut",
+            <div class="form-group">
 
-        data:{
+                <label for="uploadCategory">
+                    Category
+                </label>
 
-            labels:[
-                "Approved",
-                "Approved As Corrected",
-                "Revise & Resubmit",
-                "Submitted",
-                "Draft",
-                "Superseded",
-                "Cancelled",
-                "Overdue",
-                "Transmitted"
-            ],
+                <select
+                    id="uploadCategory"
+                    name="category"
+                    required>
 
-            datasets:[{
+                    <option value="">
+                        Select Category
+                    </option>
 
-                data:[
-                    approved,
-                    approvedAsCorrected,
-                    reviseResubmit,
-                    submitted,
-                    draft,
-                    superseded,
-                    cancelled,
-                    overdue,
-                    transmitted
-                ],
+                    <option value="RFI">
+                        RFI
+                    </option>
 
-                backgroundColor:[
-                    "#16a34a",
-                    "#FEBE1E",
-                    "#FE0000",
-                    "#765BFF",
-                    "#D2591C",
-                    "#D8E438",
-                    "#EDADAD",
-                    "#DC2626",
-                    "#241AE4"
-                    
-                ],
+                    <option value="RFA">
+                        RFA
+                    </option>
 
-                borderWidth:1
+                    <option value="CVI">
+                        CVI
+                    </option>
 
-            }]
+                    <option value="NTP">
+                        NTP
+                    </option>
 
-        },
+                    <option value="Drawings">
+                        Drawings
+                    </option>
 
-        options:{
+                    <option value="Method Statement">
+                        Method Statement
+                    </option>
 
-            responsive:true,
+                    <option value="Materials">
+                        Materials
+                    </option>
 
-            plugins:{
+                    <option value="Submittals">
+                        Submittals
+                    </option>
 
-                legend:{
+                    <option value="Transmittals">
+                        Transmittals
+                    </option>
 
-                    position:"bottom"
+                    <option value="Letters">
+                        Letters
+                    </option>
 
-                }
+                    <option value="Safety">
+                        Safety
+                    </option>
 
-            }
+                    <option value="Other">
+                        Other
+                    </option>
 
-        }
+                </select>
 
-    });
+            </div>
 
-}
 
-displayDocuments(documents);
+            <!-- TRADE -->
 
-function updateDashboard(){
+            <div class="form-group">
 
-    document.getElementById("totalDocs").textContent =
-        documents.length;
+                <label for="uploadTrade">
+                    Trade
+                </label>
 
-    document.getElementById("approvedDocs").textContent =
-        documents.filter(d => d.status === "Approved").length;
+                <select
+                    id="uploadTrade"
+                    name="trade">
 
-    document.getElementById("approvedAsCorrectedDocs").textContent =
-        documents.filter(d => d.status === "Approved As Corrected").length;
+                    <option value="">
+                        Select Trade
+                    </option>
 
-    document.getElementById("reviseResubmitDocs").textContent =
-        documents.filter(d => d.status === "Revise & Resubmit").length;
+                    <option value="Architectural">
+                        Architectural
+                    </option>
 
-    document.getElementById("submittedDocs").textContent =
-        documents.filter(d => d.status === "Submitted").length;
+                    <option value="Civil">
+                        Civil
+                    </option>
 
-    document.getElementById("draftDocs").textContent =
-        documents.filter(d => d.status === "Draft").length;
+                    <option value="Structural">
+                        Structural
+                    </option>
 
-    document.getElementById("transmittedDocs").textContent =
-        documents.filter(d => d.status === "Transmitted").length;
+                    <option value="Electrical">
+                        Electrical
+                    </option>
 
-    document.getElementById("cancelledDocs").textContent =
-        documents.filter(d => d.status === "Cancelled").length;
-    
-    document.getElementById("supersededDocs").textContent =    
-        documents.filter(d => d.status === "Superseded").length;
+                    <option value="Mechanical">
+                        Mechanical
+                    </option>
 
-    document.getElementById("overdueDocs").textContent =
-    documents.filter(doc => {
+                    <option value="Plumbing">
+                        Plumbing
+                    </option>
 
-        if (doc.status !== "Submitted") return false;
+                    <option value="Safety">
+                        Safety
+                    </option>
 
-        if (!doc.dueDate) return false;
+                </select>
 
-        return new Date() > new Date(doc.dueDate);
+            </div>
 
-    }).length;
 
-        updateChart();
+            <!-- TITLE -->
 
-}
+            <div class="form-group full-width">
 
-})
-.catch(error => {
+                <label for="uploadTitle">
+                    Document Title
+                </label>
 
-    console.error(error);
+                <input
+                    type="text"
+                    id="uploadTitle"
+                    name="title"
+                    placeholder="Enter document title"
+                    required>
 
-});
+            </div>
 
-function displayDocuments(list) {
 
-    const table = document.getElementById("tableBody");
+            <!-- REVISION -->
 
-    table.innerHTML = "";
+            <div class="form-group">
 
-    list.forEach(doc => {
+                <label for="uploadRevision">
+                    Revision
+                </label>
 
-        let statusClass = "";
+                <input
+                    type="text"
+                    id="uploadRevision"
+                    name="revision"
+                    value="00">
 
-        const isOverdue =
-            doc.status === "Submitted" &&
-            doc.dueDate &&
-            new Date() > new Date(doc.dueDate);
+            </div>
 
-        const displayStatus =
-            isOverdue ? "Overdue" : doc.status;
 
-        if (doc.status === "Approved")
-            statusClass = "status-approved";
+            <!-- STATUS -->
 
-        if (doc.status === "Approved As Corrected")
-            statusClass = "status-approvedAsCorrected";
+            <div class="form-group">
 
-        if (doc.status === "Revise & Resubmit")
-            statusClass = "status-reviseResubmit";
+                <label for="uploadStatus">
+                    Status
+                </label>
 
-        if (doc.status === "Transmitted")
-            statusClass = "status-transmitted";
+                <select
+                    id="uploadStatus"
+                    name="status">
 
-        if (doc.status === "Submitted")
-            statusClass = "status-submitted";
+                    <option value="Draft">
+                        Draft
+                    </option>
 
-        if (isOverdue)
-            statusClass = "status-overdue";
+                    <option value="Submitted">
+                        Submitted
+                    </option>
 
-        if (doc.status === "Draft")
-            statusClass = "status-draft";
+                    <option value="Approved">
+                        Approved
+                    </option>
 
-        if (doc.status === "Cancelled")
-            statusClass = "status-cancelled";
+                    <option value="Approved As Corrected">
+                        Approved As Corrected
+                    </option>
 
-        if (doc.status === "Superseded")
-            statusClass = "status-superseded";
+                    <option value="Revise & Resubmit">
+                        Revise & Resubmit
+                    </option>
 
-        table.innerHTML += `
-            <tr>
-                <td>${doc.docNo}</td>
-                <td>${doc.category}</td>
-                <td>${doc.trade}</td>
-                <td>${doc.title}</td>
-                <td>${doc.revision}</td>
-                <td class="${statusClass}">
-                    ${displayStatus}
-                </td>
-                <td>${doc.date}</td>
-                <td>
-                    <a href="${doc.link}" target="_blank" class="view-btn">
-                        View
-                    </a>
-                </td>
-            </tr>
-        `;
+                    <option value="Cancelled">
+                        Cancelled
+                    </option>
 
-    });
+                    <option value="Superseded">
+                        Superseded
+                    </option>
 
-    document.getElementById("recordCount").innerHTML =
-        "Total Documents : <b>" + list.length + "</b>";
+                </select>
 
-}
+            </div>
 
-const search=document.getElementById("searchBox");
 
-const status=document.getElementById("statusFilter");
+            <!-- DATE -->
 
-const category = document.getElementById("categoryFilter");
+            <div class="form-group">
 
-const trade = document.getElementById("tradeFilter");
+                <label for="uploadDate">
+                    Date
+                </label>
 
-const sort = document.getElementById("sortFilter");
+                <input
+                    type="date"
+                    id="uploadDate"
+                    name="date">
 
-function filterDocuments(){
+            </div>
 
-    const keyword = search.value.toLowerCase();
 
-    const selectedStatus = status.value;
-    const selectedCategory = category.value;
-    const selectedTrade = trade.value;
+            <!-- DUE DATE -->
 
-    const filtered = documents.filter(doc => {
+            <div class="form-group">
 
-        const matchText =
-            doc.docNo.toLowerCase().includes(keyword) ||
-            doc.title.toLowerCase().includes(keyword) ||
-            doc.category.toLowerCase().includes(keyword) ||
-            doc.trade.toLowerCase().includes(keyword);
+                <label for="uploadDueDate">
+                    Due Date
+                </label>
 
-        const isOverdue =
-    doc.status === "Submitted" &&
-    doc.dueDate &&
-    new Date() > new Date(doc.dueDate);
+                <input
+                    type="date"
+                    id="uploadDueDate"
+                    name="dueDate">
 
-        const displayStatus =
-    isOverdue ? "Overdue" : doc.status;
+            </div>
 
-        const matchStatus =
-    selectedStatus === "" ||
-    (selectedStatus === "Overdue"
-        ? isOverdue
-        : doc.status === selectedStatus);
 
-        const matchCategory =
-            selectedCategory === "" ||
-            doc.category === selectedCategory;
+            <!-- BALL IN COURT -->
 
-        const matchTrade =
-            selectedTrade === "" ||
-            doc.trade === selectedTrade;
+            <div class="form-group">
 
-        return (
-            matchText &&
-            matchStatus &&
-            matchCategory &&
-            matchTrade
-  
-        );
+                <label for="uploadBallInCourt">
+                    Ball in Court
+                </label>
 
-    });
+                <input
+                    type="text"
+                    id="uploadBallInCourt"
+                    name="ballInCourt"
+                    placeholder="e.g. Contractor / Consultant / DPWH">
 
-    switch(sort.value){
+            </div>
 
-        case "date-desc":
-            filtered.sort((a,b)=>new Date(b.date)-new Date(a.date));
-            break;
 
-        case "date-asc":
-            filtered.sort((a,b)=>new Date(a.date)-new Date(b.date));
-            break;
+            <!-- ACTIVITY ID -->
 
-        case "doc-asc":
-            filtered.sort((a,b)=>a.docNo.localeCompare(b.docNo));
-            break;
+            <div class="form-group">
 
-        case "doc-desc":
-            filtered.sort((a,b)=>b.docNo.localeCompare(a.docNo));
-            break;
+                <label for="uploadActivityId">
+                    Activity ID
+                </label>
 
-        case "title-asc":
-            filtered.sort((a,b)=>a.title.localeCompare(b.title));
-            break;
+                <input
+                    type="text"
+                    id="uploadActivityId"
+                    name="activityId"
+                    placeholder="Activity ID">
 
-        case "title-desc":
-            filtered.sort((a,b)=>b.title.localeCompare(a.title));
-            break;
+            </div>
 
-    }
 
-    displayDocuments(filtered);
+            <!-- ACTIVITY NAME -->
 
-}
+            <div class="form-group full-width">
 
-search.addEventListener("keyup",filterDocuments);
+                <label for="uploadActivityName">
+                    Activity Name
+                </label>
 
-status.addEventListener("change",filterDocuments);
+                <input
+                    type="text"
+                    id="uploadActivityName"
+                    name="activityName"
+                    placeholder="Activity Name">
 
-category.addEventListener("change", filterDocuments);
+            </div>
 
-trade.addEventListener("change", filterDocuments);
 
-sort.addEventListener("change", filterDocuments);
+            <!-- PREPARED BY -->
 
-</script>
+            <div class="form-group">
+
+                <label for="uploadPreparedBy">
+                    Prepared By
+                </label>
+
+                <input
+                    type="text"
+                    id="uploadPreparedBy"
+                    name="preparedBy"
+                    placeholder="Prepared by">
+
+            </div>
+
+
+            <!-- SUBMITTED BY -->
+
+            <div class="form-group">
+
+                <label for="uploadSubmittedBy">
+                    Submitted By
+                </label>
+
+                <input
+                    type="text"
+                    id="uploadSubmittedBy"
+                    name="submittedBy"
+                    placeholder="Submitted by">
+
+            </div>
+
+            <!-- UPLOADED BY -->
+            
+            <div class="form-group">
+            <label for="uploadUploadedBy">
+                 Uploaded By
+            </label>
+
+    <input
+        type="text"
+        id="uploadUploadedBy"
+        name="uploadedBy"
+        placeholder="Uploaded by">
+</div>
+
+
+            <!-- REMARKS -->
+
+            <div class="form-group full-width">
+
+                <label for="uploadRemarks">
+                    Remarks
+                </label>
+
+                <textarea
+                    id="uploadRemarks"
+                    name="remarks"
+                    placeholder="Enter remarks"></textarea>
+
+            </div>
+
+
+            <!-- FILE -->
+
+            <div class="form-group full-width">
+
+                <label for="uploadFile">
+                    Document File
+                </label>
+
+                <input
+                    type="file"
+                    id="uploadFile"
+                    name="file"
+                    class="file-input"
+                    required>
+
+                <div
+                    class="file-info"
+                    id="uploadFileInfo">
+
+                    Select the document to upload.
+
+                </div>
+
+            </div>
+
+
+            <!-- MESSAGE -->
+
+            <div
+                class="upload-message"
+                id="uploadMessage">
+            </div>
+
+
+            <!-- ACTIONS -->
+
+            <div class="upload-form-actions">
+
+                <button
+                    type="button"
+                    class="cancel-upload-btn"
+                    id="cancelUploadBtn">
+
+                    Cancel
+
+                </button>
+
+
+                <button
+                    type="submit"
+                    class="submit-upload-btn"
+                    id="submitUploadBtn">
+
+                    Upload Document
+
+                </button>
+
+            </div>
+
+
+        </form>
+
+
+    </div>
+
+
+</div>
+
+
+<!-- =========================================================
+     JAVASCRIPT
+========================================================= -->
+
+<script src="js/documents.js"></script>
+
 
 </body>
+
+</html>
