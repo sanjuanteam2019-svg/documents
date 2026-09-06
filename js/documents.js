@@ -1,42 +1,90 @@
-// ==========================================
+"use strict";
+
+
+// ============================================================
 // DEVEX DOCUMENT PORTAL
 // PROJECT DOCUMENT REGISTER
-// Google Apps Script + Google Sheets
-// ==========================================
+// GOOGLE APPS SCRIPT + GOOGLE SHEETS + GOOGLE DRIVE
+// ============================================================
 
+
+// ============================================================
+// CONFIGURATION
+// ============================================================
+
+// Use the plain deployed Google Apps Script Web App URL.
+// Do not place HTML anchor tags inside this value.
 const GOOGLE_DOCUMENT_API =
     "https://script.google.com/macros/s/AKfycbwjZ_jsSXJlGmwAG68LxIOtKm0KAurN_jy89Z_3Ris0-2ujDtBbC-Zxvtr3wvlDtohTSA/exec";
 
 
-// ==========================================
+// Maximum original file size before Base64 conversion.
+// Increase carefully because Base64 makes files larger.
+const MAX_UPLOAD_SIZE_MB = 50;
+
+
+// Date display format.
+const DATE_LOCALE = "en-PH";
+
+
+// ============================================================
 // DATA
-// ==========================================
+// ============================================================
 
+// Contains all documents belonging to the currently selected
+// project.
 let documents = [];
-let statusChart;
 
 
-// ==========================================
+// Chart.js chart instance.
+let statusChart = null;
+
+
+// Prevents an older loading request from replacing a newer one.
+let loadSequence = 0;
+
+
+// ============================================================
 // PROJECT INFORMATION
-// ==========================================
+// ============================================================
 
 const params =
     new URLSearchParams(
         window.location.search
     );
 
+
 const project =
-    params.get("project");
+    String(
+        params.get("project") || ""
+    ).trim();
 
 
-// ==========================================
-// ELEMENTS
-// ==========================================
+// Project identifiers must match the identifiers stored in the
+// Project column of the Documents sheet.
+const projectNames = {
+
+    "22-storey-multipurpose-building":
+        "Multipurpose Building",
+
+    "government-center":
+        "Government Center",
+
+    "school-cluster3":
+        "School Cluster 3"
+
+};
+
+
+// ============================================================
+// PAGE ELEMENTS
+// ============================================================
 
 const projectTitle =
     document.getElementById(
         "projectTitle"
     );
+
 
 const tableBody =
     document.getElementById(
@@ -44,80 +92,279 @@ const tableBody =
     );
 
 
-// ==========================================
-// PROJECT NAME
-// ==========================================
-
-const projectNames = {
-
-    "22-storey-multipurpose-building":
-        "Multipurpose Building",
-
-     "government-center":
-        "Government Center",
-
-     "school-cluster3":
-         "School Cluster 3"
-};
+const recordCount =
+    document.getElementById(
+        "recordCount"
+    );
 
 
-// ==========================================
-// CHECK PROJECT
-// ==========================================
+// Filter elements
+const searchBox =
+    document.getElementById(
+        "searchBox"
+    );
 
-if (!project) {
+
+const statusFilter =
+    document.getElementById(
+        "statusFilter"
+    );
+
+
+const categoryFilter =
+    document.getElementById(
+        "categoryFilter"
+    );
+
+
+const tradeFilter =
+    document.getElementById(
+        "tradeFilter"
+    );
+
+
+const sortFilter =
+    document.getElementById(
+        "sortFilter"
+    );
+
+
+// Upload elements
+const openUploadBtn =
+    document.getElementById(
+        "openUploadBtn"
+    );
+
+
+const closeUploadBtn =
+    document.getElementById(
+        "closeUploadBtn"
+    );
+
+
+const cancelUploadBtn =
+    document.getElementById(
+        "cancelUploadBtn"
+    );
+
+
+const uploadModal =
+    document.getElementById(
+        "uploadModal"
+    );
+
+
+const uploadForm =
+    document.getElementById(
+        "uploadForm"
+    );
+
+
+const uploadFile =
+    document.getElementById(
+        "uploadFile"
+    );
+
+
+const uploadFileInfo =
+    document.getElementById(
+        "uploadFileInfo"
+    );
+
+
+const uploadMessage =
+    document.getElementById(
+        "uploadMessage"
+    );
+
+
+const submitUploadBtn =
+    document.getElementById(
+        "submitUploadBtn"
+    );
+
+
+const uploadProject =
+    document.getElementById(
+        "uploadProject"
+    );
+
+
+// ============================================================
+// CHECK SELECTED PROJECT
+// ============================================================
+
+function validateSelectedProject() {
+
+    if (project) {
+        return true;
+    }
+
 
     alert(
         "No project selected."
     );
 
-    window.location.href =
-        "projects.html";
+
+    window.location.replace(
+        "projects.html"
+    );
+
+
+    return false;
 
 }
 
 
-// ==========================================
+// ============================================================
 // PROJECT TITLE
-// ==========================================
+// ============================================================
 
-if (projectTitle) {
+function initializeProjectTitle() {
+
+    if (!projectTitle) {
+        return;
+    }
+
 
     projectTitle.textContent =
         "📄 " +
-        (
-            projectNames[project] ||
+        getProjectDisplayName(
             project
         );
 
 }
 
 
-// ==========================================
+// ============================================================
+// PROJECT DISPLAY NAME
+// ============================================================
+
+function getProjectDisplayName(
+    projectId
+) {
+
+    const cleanProjectId =
+        safeText(projectId);
+
+
+    return (
+        projectNames[
+            cleanProjectId
+        ] ||
+        cleanProjectId
+    );
+
+}
+
+
+// ============================================================
+// BUILD API URL
+// ============================================================
+
+function buildApiUrl(parameters) {
+
+    if (
+        !GOOGLE_DOCUMENT_API ||
+        !GOOGLE_DOCUMENT_API.endsWith(
+            "/exec"
+        )
+    ) {
+
+        throw new Error(
+            "The Google Apps Script URL is not configured correctly."
+        );
+
+    }
+
+
+    const url =
+        new URL(
+            GOOGLE_DOCUMENT_API
+        );
+
+
+    Object.entries(
+        parameters || {}
+    ).forEach(
+        function ([key, value]) {
+
+            if (
+                value !== null &&
+                typeof value !== "undefined" &&
+                value !== ""
+            ) {
+
+                url.searchParams.set(
+                    key,
+                    String(value)
+                );
+
+            }
+
+        }
+    );
+
+
+    // Cache-busting value so the register refreshes after upload.
+    url.searchParams.set(
+        "_",
+        Date.now().toString()
+    );
+
+
+    return url.toString();
+
+}
+
+
+// ============================================================
 // LOAD DOCUMENTS
-// ==========================================
+// ============================================================
 
 async function loadDocuments() {
 
+    if (!project) {
+        return;
+    }
+
+
+    const currentSequence =
+        ++loadSequence;
+
+
+    displayTableMessage(
+        "Loading documents...",
+        ""
+    );
+
+
     try {
 
-        if (tableBody) {
+        const apiUrl =
+            buildApiUrl({
 
-            tableBody.innerHTML = `
-                <tr>
-                    <td colspan="10"
-                        style="text-align:center;padding:25px;">
-                        Loading documents...
-                    </td>
-                </tr>
-            `;
+                action:
+                    "documents"
 
-        }
+            });
 
 
         const response =
             await fetch(
-                GOOGLE_DOCUMENT_API
+                apiUrl,
+                {
+
+                    method:
+                        "GET",
+
+                    redirect:
+                        "follow",
+
+                    cache:
+                        "no-store"
+
+                }
             );
 
 
@@ -125,29 +372,53 @@ async function loadDocuments() {
 
             throw new Error(
                 "Server returned HTTP " +
-                response.status
+                response.status +
+                "."
             );
 
         }
 
 
-        const result =
-            await response.json();
+        const responseText =
+            await response.text();
 
 
-        console.log(
-            "Document API response:",
-            result
-        );
+        let result;
+
+
+        try {
+
+            result =
+                JSON.parse(
+                    responseText
+                );
+
+
+        } catch (parseError) {
+
+            console.error(
+                "Unexpected document API response:",
+                responseText
+            );
+
+
+            throw new Error(
+                "The document server did not return valid JSON."
+            );
+
+        }
 
 
         if (
-            !result.success
+            !result ||
+            result.success !== true
         ) {
 
             throw new Error(
-                result.message ||
-                "Unable to load documents."
+                result &&
+                result.message
+                    ? result.message
+                    : "Unable to load documents."
             );
 
         }
@@ -161,41 +432,63 @@ async function loadDocuments() {
                 : [];
 
 
-        // ----------------------------------
-// TEMPORARY: SHOW ALL DOCUMENTS
-// ----------------------------------
+        // Ignore an older request if a newer request completed.
+        if (
+            currentSequence !==
+            loadSequence
+        ) {
 
-documents = allDocuments.filter(doc => {
+            return;
 
-    const storedProject =
-        String(doc.Project || "")
-            .trim()
-            .toLowerCase();
+        }
 
-    const currentProject =
-        String(project || "")
-            .trim()
-            .toLowerCase();
 
-    return storedProject === currentProject;
+        documents =
+            allDocuments
 
-});
+                .map(
+                    normalizeDocument
+                )
+
+                .filter(
+                    function (documentRecord) {
+
+                        return (
+                            normalizeText(
+                                documentRecord.Project
+                            ) ===
+                            normalizeText(
+                                project
+                            )
+                        );
+
+                    }
+                );
+
+
+        console.log(
+            "All API documents:",
+            allDocuments.length
+        );
+
+
         console.log(
             "Documents for project:",
-            documents
+            project,
+            documents.length
         );
+
+
+        populateFilterOptions();
 
 
         updateDashboard();
 
-        displayDocuments(
-            documents
-        );
+
+        filterDocuments();
 
 
-    }
-
-    catch (error) {
+    } catch (error) {
 
         console.error(
             "Document loading error:",
@@ -203,139 +496,263 @@ documents = allDocuments.filter(doc => {
         );
 
 
-        if (tableBody) {
+        documents = [];
 
-            tableBody.innerHTML = `
 
-                <tr>
+        updateDashboard();
 
-                    <td
-                        colspan="10"
-                        style="
-                            text-align:center;
-                            padding:25px;
-                            color:#dc2626;
-                        "
-                    >
 
-                        Unable to load the
-                        Document Register.
-
-                        <br><br>
-
-                        ${escapeHTML(
-                            error.message
-                        )}
-
-                    </td>
-
-                </tr>
-
-            `;
-
-        }
+        displayTableMessage(
+            "Unable to load the Document Register. " +
+            getErrorMessage(error),
+            "#dc2626"
+        );
 
     }
 
 }
 
 
-// ==========================================
-// DASHBOARD
-// ==========================================
+// ============================================================
+// NORMALIZE API DOCUMENT
+//
+// Supports both capitalized spreadsheet field names and
+// lowercase dashboard field names.
+// ============================================================
+
+function normalizeDocument(record) {
+
+    const source =
+        record &&
+        typeof record === "object"
+            ? record
+            : {};
+
+
+    return {
+
+        DocNo:
+            getFirstValue(
+                source.DocNo,
+                source.docNo
+            ),
+
+        Category:
+            getFirstValue(
+                source.Category,
+                source.category
+            ),
+
+        Trade:
+            getFirstValue(
+                source.Trade,
+                source.trade
+            ),
+
+        Title:
+            getFirstValue(
+                source.Title,
+                source.title,
+                source.FileName,
+                source.fileName
+            ),
+
+        Revision:
+            getFirstValue(
+                source.Revision,
+                source.revision
+            ),
+
+        Status:
+            getFirstValue(
+                source.Status,
+                source.status
+            ),
+
+        Date:
+            getFirstValue(
+                source.Date,
+                source.date
+            ),
+
+        DueDate:
+            getFirstValue(
+                source.DueDate,
+                source.dueDate
+            ),
+
+        BallInCourt:
+            getFirstValue(
+                source.BallInCourt,
+                source.ballInCourt
+            ),
+
+        ActivityID:
+            getFirstValue(
+                source.ActivityID,
+                source.activityId
+            ),
+
+        ActivityName:
+            getFirstValue(
+                source.ActivityName,
+                source.activityName
+            ),
+
+        Project:
+            getFirstValue(
+                source.Project,
+                source.project
+            ),
+
+        PreparedBy:
+            getFirstValue(
+                source.PreparedBy,
+                source.preparedBy
+            ),
+
+        SubmittedBy:
+            getFirstValue(
+                source.SubmittedBy,
+                source.submittedBy
+            ),
+
+        Remarks:
+            getFirstValue(
+                source.Remarks,
+                source.remarks
+            ),
+
+        FileName:
+            getFirstValue(
+                source.FileName,
+                source.fileName
+            ),
+
+        FileID:
+            getFirstValue(
+                source.FileID,
+                source.fileId
+            ),
+
+        FileLink:
+            getFirstValue(
+                source.FileLink,
+                source.fileLink
+            ),
+
+        FileSize:
+            Number(
+                getFirstValue(
+                    source.FileSize,
+                    source.fileSize,
+                    0
+                )
+            ) || 0,
+
+        FileType:
+            getFirstValue(
+                source.FileType,
+                source.fileType
+            ),
+
+        UploadedBy:
+            getFirstValue(
+                source.UploadedBy,
+                source.uploadedBy
+            ),
+
+        UploadedDate:
+            getFirstValue(
+                source.UploadedDate,
+                source.uploadedDate
+            ),
+
+        Folder:
+            getFirstValue(
+                source.Folder,
+                source.folder
+            )
+
+    };
+
+}
+
+
+// ============================================================
+// DASHBOARD CARDS
+// ============================================================
 
 function updateDashboard() {
 
-    document.getElementById(
-        "totalDocs"
-    ).textContent =
-        documents.length;
+    safelySetText(
+        "totalDocs",
+        documents.length
+    );
 
 
-    document.getElementById(
-        "approvedDocs"
-    ).textContent =
-
-        documents.filter(
-            d =>
-                d.Status ===
-                "Approved"
-        ).length;
+    safelySetText(
+        "approvedDocs",
+        countByStatus(
+            "Approved"
+        )
+    );
 
 
-    document.getElementById(
-        "approvedAsCorrectedDocs"
-    ).textContent =
-
-        documents.filter(
-            d =>
-                d.Status ===
-                "Approved As Corrected"
-        ).length;
+    safelySetText(
+        "approvedAsCorrectedDocs",
+        countByStatus(
+            "Approved As Corrected"
+        )
+    );
 
 
-    document.getElementById(
-        "reviseResubmitDocs"
-    ).textContent =
-
-        documents.filter(
-            d =>
-                d.Status ===
-                "Revise & Resubmit"
-        ).length;
+    safelySetText(
+        "reviseResubmitDocs",
+        countByStatus(
+            "Revise & Resubmit"
+        )
+    );
 
 
-    document.getElementById(
-        "submittedDocs"
-    ).textContent =
-
-        documents.filter(
-            d =>
-                d.Status ===
-                "Submitted"
-        ).length;
+    safelySetText(
+        "submittedDocs",
+        countByStatus(
+            "Submitted"
+        )
+    );
 
 
-    document.getElementById(
-        "draftDocs"
-    ).textContent =
-
-        documents.filter(
-            d =>
-                d.Status ===
-                "Draft"
-        ).length;
+    safelySetText(
+        "draftDocs",
+        countByStatus(
+            "Draft"
+        )
+    );
 
 
-    document.getElementById(
-        "cancelledDocs"
-    ).textContent =
-
-        documents.filter(
-            d =>
-                d.Status ===
-                "Cancelled"
-        ).length;
+    safelySetText(
+        "cancelledDocs",
+        countByStatus(
+            "Cancelled"
+        )
+    );
 
 
-    document.getElementById(
-        "supersededDocs"
-    ).textContent =
-
-        documents.filter(
-            d =>
-                d.Status ===
-                "Superseded"
-        ).length;
+    safelySetText(
+        "supersededDocs",
+        countByStatus(
+            "Superseded"
+        )
+    );
 
 
-    document.getElementById(
-        "overdueDocs"
-    ).textContent =
-
+    safelySetText(
+        "overdueDocs",
         documents.filter(
             isDocumentOverdue
-        ).length;
+        ).length
+    );
 
 
     updateChart();
@@ -343,123 +760,151 @@ function updateDashboard() {
 }
 
 
-// ==========================================
-// OVERDUE
-// ==========================================
+// ============================================================
+// STATUS HELPERS
+// ============================================================
 
-function isDocumentOverdue(
-    doc
+function getDocumentStatus(
+    documentRecord
 ) {
 
-    if (
-        doc.Status !==
-        "Submitted"
-    ) {
-
-        return false;
-
-    }
-
-
-    if (
-        !doc.DueDate
-    ) {
-
-        return false;
-
-    }
-
-
-    const due =
-        new Date(
-            doc.DueDate
-        );
-
-
-    return (
-        !isNaN(
-            due.getTime()
-        ) &&
-        new Date() > due
+    return safeText(
+        documentRecord &&
+        documentRecord.Status
     );
 
 }
 
 
-// ==========================================
-// STATUS CHART
-// ==========================================
+function statusEquals(
+    documentRecord,
+    expectedStatus
+) {
 
-function updateChart() {
+    return (
+        normalizeText(
+            getDocumentStatus(
+                documentRecord
+            )
+        ) ===
+        normalizeText(
+            expectedStatus
+        )
+    );
 
-    const approved =
-        documents.filter(
-            d =>
-                d.Status ===
-                "Approved"
-        ).length;
-
-
-    const approvedAsCorrected =
-        documents.filter(
-            d =>
-                d.Status ===
-                "Approved As Corrected"
-        ).length;
+}
 
 
-    const reviseResubmit =
-        documents.filter(
-            d =>
-                d.Status ===
-                "Revise & Resubmit"
-        ).length;
+function countByStatus(
+    expectedStatus
+) {
+
+    return documents.filter(
+        function (documentRecord) {
+
+            return statusEquals(
+                documentRecord,
+                expectedStatus
+            );
+
+        }
+    ).length;
+
+}
 
 
-    const submitted =
-        documents.filter(
-            d =>
-                d.Status ===
-                "Submitted"
-        ).length;
+// ============================================================
+// OVERDUE
+//
+// Approved, approved-as-corrected, cancelled, and superseded
+// documents are treated as closed.
+//
+// A due date becomes overdue only after the end of that date.
+// ============================================================
+
+function isDocumentOverdue(
+    documentRecord
+) {
+
+    const status =
+        normalizeText(
+            getDocumentStatus(
+                documentRecord
+            )
+        );
 
 
-    const draft =
-        documents.filter(
-            d =>
-                d.Status ===
-                "Draft"
-        ).length;
+    const closedStatuses = [
+
+        "approved",
+        "approved as corrected",
+        "cancelled",
+        "superseded"
+
+    ];
 
 
-    const superseded =
-        documents.filter(
-            d =>
-                d.Status ===
-                "Superseded"
-        ).length;
+    if (
+        closedStatuses.includes(
+            status
+        )
+    ) {
 
-
-    const cancelled =
-        documents.filter(
-            d =>
-                d.Status ===
-                "Cancelled"
-        ).length;
-
-
-    const overdue =
-        documents.filter(
-            isDocumentOverdue
-        ).length;
-
-
-    if (statusChart) {
-
-        statusChart.destroy();
+        return false;
 
     }
 
+
+    const dueDateValue =
+        documentRecord &&
+        documentRecord.DueDate;
+
+
+    if (!dueDateValue) {
+
+        return false;
+
+    }
+
+
+    const dueDate =
+        new Date(
+            dueDateValue
+        );
+
+
+    if (
+        Number.isNaN(
+            dueDate.getTime()
+        )
+    ) {
+
+        return false;
+
+    }
+
+
+    dueDate.setHours(
+        23,
+        59,
+        59,
+        999
+    );
+
+
+    return (
+        Date.now() >
+        dueDate.getTime()
+    );
+
+}
+
+
+// ============================================================
+// STATUS CHART
+// ============================================================
+
+function updateChart() {
 
     const canvas =
         document.getElementById(
@@ -468,17 +913,36 @@ function updateChart() {
 
 
     if (!canvas) {
+        return;
+    }
+
+
+    if (
+        typeof Chart ===
+        "undefined"
+    ) {
+
+        console.warn(
+            "Chart.js is not loaded."
+        );
 
         return;
 
     }
 
 
+    if (statusChart) {
+
+        statusChart.destroy();
+
+        statusChart = null;
+
+    }
+
+
     statusChart =
         new Chart(
-
             canvas,
-
             {
 
                 type:
@@ -503,14 +967,37 @@ function updateChart() {
 
                         data: [
 
-                            approved,
-                            approvedAsCorrected,
-                            reviseResubmit,
-                            submitted,
-                            draft,
-                            superseded,
-                            cancelled,
-                            overdue
+                            countByStatus(
+                                "Approved"
+                            ),
+
+                            countByStatus(
+                                "Approved As Corrected"
+                            ),
+
+                            countByStatus(
+                                "Revise & Resubmit"
+                            ),
+
+                            countByStatus(
+                                "Submitted"
+                            ),
+
+                            countByStatus(
+                                "Draft"
+                            ),
+
+                            countByStatus(
+                                "Superseded"
+                            ),
+
+                            countByStatus(
+                                "Cancelled"
+                            ),
+
+                            documents.filter(
+                                isDocumentOverdue
+                            ).length
 
                         ],
 
@@ -527,7 +1014,8 @@ function updateChart() {
 
                         ],
 
-                        borderWidth: 1
+                        borderWidth:
+                            1
 
                     }]
 
@@ -535,7 +1023,11 @@ function updateChart() {
 
                 options: {
 
-                    responsive: true,
+                    responsive:
+                        true,
+
+                    maintainAspectRatio:
+                        false,
 
                     plugins: {
 
@@ -551,220 +1043,49 @@ function updateChart() {
                 }
 
             }
-
         );
 
 }
 
 
-// ==========================================
+// ============================================================
 // DISPLAY DOCUMENTS
-// ==========================================
+// ============================================================
 
-function displayDocuments(
-    list
-) {
+function displayDocuments(list) {
 
     if (!tableBody) {
-
         return;
-
     }
 
 
-    tableBody.innerHTML = "";
+    tableBody.replaceChildren();
 
-
-    // --------------------------------------
-    // EMPTY REGISTER
-    // --------------------------------------
 
     if (
-        !list.length
+        !Array.isArray(list) ||
+        list.length === 0
     ) {
 
-        tableBody.innerHTML = `
-
-            <tr>
-
-                <td
-                    colspan="10"
-                    style="
-                        text-align:center;
-                        padding:30px;
-                        color:#64748b;
-                    "
-                >
-
-                    No project documents
-                    have been registered yet.
-
-                </td>
-
-            </tr>
-
-        `;
+        displayTableMessage(
+            "No project documents were found.",
+            "#64748b"
+        );
 
 
-        document.getElementById(
-            "recordCount"
-        ).innerHTML =
-            "Total Documents : <b>0</b>";
-
+        updateRecordCount(0);
 
         return;
 
     }
 
 
-    // --------------------------------------
-    // DISPLAY
-    // --------------------------------------
+    const fragment =
+        document.createDocumentFragment();
+
 
     list.forEach(
-        doc => {
-
-            let statusClass =
-                "";
-
-
-            const overdue =
-                isDocumentOverdue(
-                    doc
-                );
-
-
-            const displayStatus =
-                overdue
-                    ? "Overdue"
-                    : (
-                        doc.Status ||
-                        ""
-                    );
-
-
-            // ------------------------------
-            // STATUS CLASS
-            // ------------------------------
-
-            if (
-                doc.Status ===
-                "Approved"
-            ) {
-
-                statusClass =
-                    "status-approved";
-
-            }
-
-
-            if (
-                doc.Status ===
-                "Approved As Corrected"
-            ) {
-
-                statusClass =
-                    "status-approvedAsCorrected";
-
-            }
-
-
-            if (
-                doc.Status ===
-                "Revise & Resubmit"
-            ) {
-
-                statusClass =
-                    "status-reviseResubmit";
-
-            }
-
-
-            if (
-                doc.Status ===
-                "Submitted"
-            ) {
-
-                statusClass =
-                    "status-submitted";
-
-            }
-
-
-            if (
-                doc.Status ===
-                "Draft"
-            ) {
-
-                statusClass =
-                    "status-draft";
-
-            }
-
-
-            if (
-                doc.Status ===
-                "Cancelled"
-            ) {
-
-                statusClass =
-                    "status-cancelled";
-
-            }
-
-
-            if (
-                doc.Status ===
-                "Superseded"
-            ) {
-
-                statusClass =
-                    "status-superseded";
-
-            }
-
-
-            if (overdue) {
-
-                statusClass =
-                    "status-overdue";
-
-            }
-
-
-            // ------------------------------
-            // FILE
-            // ------------------------------
-
-            let fileCell =
-                "—";
-
-
-            if (
-                doc.FileLink
-            ) {
-
-                fileCell = `
-
-                    <a
-                        href="${escapeHTML(
-                            doc.FileLink
-                        )}"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="view-btn"
-                    >
-                        View
-                    </a>
-
-                `;
-
-            }
-
-
-            // ------------------------------
-            // ROW
-            // ------------------------------
+        function (documentRecord) {
 
             const row =
                 document.createElement(
@@ -772,72 +1093,67 @@ function displayDocuments(
                 );
 
 
-            row.innerHTML = `
-
-                <td>
-                    ${escapeHTML(
-                        doc.DocNo
-                    )}
-                </td>
-
-                <td>
-                    ${escapeHTML(
-                        doc.Category
-                    )}
-                </td>
-
-                <td>
-                    ${escapeHTML(
-                        doc.Trade
-                    )}
-                </td>
-
-                <td>
-                    ${escapeHTML(
-                        doc.Title
-                    )}
-                </td>
-
-                <td>
-                    ${escapeHTML(
-                        doc.Revision
-                    )}
-                </td>
-
-                <td
-                    class="${statusClass}"
-                >
-                    ${escapeHTML(
-                        displayStatus
-                    )}
-                </td>
-
-                <td>
-                    ${formatDate(
-                        doc.Date
-                    )}
-                </td>
-
-                <td>
-                    ${formatDate(
-                        doc.DueDate
-                    )}
-                </td>
-
-                <td>
-                    ${escapeHTML(
-                        doc.BallInCourt
-                    )}
-                </td>
-
-                <td>
-                    ${fileCell}
-                </td>
-
-            `;
+            appendTextCell(
+                row,
+                documentRecord.DocNo
+            );
 
 
-            tableBody.appendChild(
+            appendTextCell(
+                row,
+                documentRecord.Category
+            );
+
+
+            appendTextCell(
+                row,
+                documentRecord.Trade
+            );
+
+
+            appendTextCell(
+                row,
+                documentRecord.Title
+            );
+
+
+            appendTextCell(
+                row,
+                documentRecord.Revision
+            );
+
+
+            appendStatusCell(
+                row,
+                documentRecord
+            );
+
+
+            appendDateCell(
+                row,
+                documentRecord.Date
+            );
+
+
+            appendDateCell(
+                row,
+                documentRecord.DueDate
+            );
+
+
+            appendTextCell(
+                row,
+                documentRecord.BallInCourt
+            );
+
+
+            appendFileCell(
+                row,
+                documentRecord
+            );
+
+
+            fragment.appendChild(
                 row
             );
 
@@ -845,1078 +1161,81 @@ function displayDocuments(
     );
 
 
-    document.getElementById(
-        "recordCount"
-    ).innerHTML =
-
-        "Total Documents : <b>" +
-        list.length +
-        "</b>";
-
-}
-
-
-// ==========================================
-// FILTER ELEMENTS
-// ==========================================
-
-const search =
-    document.getElementById(
-        "searchBox"
-    );
-
-const status =
-    document.getElementById(
-        "statusFilter"
-    );
-
-const category =
-    document.getElementById(
-        "categoryFilter"
-    );
-
-const trade =
-    document.getElementById(
-        "tradeFilter"
-    );
-
-const sort =
-    document.getElementById(
-        "sortFilter"
+    tableBody.appendChild(
+        fragment
     );
 
 
-// ==========================================
-// FILTER
-// ==========================================
-
-function filterDocuments() {
-
-    const keyword =
-        (
-            search.value ||
-            ""
-        ).toLowerCase();
-
-
-    const selectedStatus =
-        status.value;
-
-
-    const selectedCategory =
-        category.value;
-
-
-    const selectedTrade =
-        trade.value;
-
-
-    const filtered =
-        documents.filter(
-            doc => {
-
-                const matchText = [
-
-                    doc.DocNo,
-                    doc.Category,
-                    doc.Trade,
-                    doc.Title,
-                    doc.Revision,
-                    doc.Status,
-                    doc.BallInCourt,
-                    doc.ActivityID,
-                    doc.ActivityName
-
-                ]
-
-                .some(
-                    value =>
-                        String(
-                            value ||
-                            ""
-                        )
-                        .toLowerCase()
-                        .includes(
-                            keyword
-                        )
-                );
-
-
-                const overdue =
-                    isDocumentOverdue(
-                        doc
-                    );
-
-
-                const matchStatus =
-
-                    selectedStatus === ""
-
-                    ||
-
-                    (
-                        selectedStatus ===
-                        "Overdue"
-
-                            ? overdue
-
-                            : doc.Status ===
-                              selectedStatus
-                    );
-
-
-                const matchCategory =
-
-                    selectedCategory === ""
-
-                    ||
-
-                    doc.Category ===
-                    selectedCategory;
-
-
-                const matchTrade =
-
-                    selectedTrade === ""
-
-                    ||
-
-                    doc.Trade ===
-                    selectedTrade;
-
-
-                return (
-
-                    matchText &&
-
-                    matchStatus &&
-
-                    matchCategory &&
-
-                    matchTrade
-
-                );
-
-            }
-        );
-
-
-    // --------------------------------------
-    // SORT
-    // --------------------------------------
-
-    switch (
-        sort.value
-    ) {
-
-        case "date-desc":
-
-            filtered.sort(
-                (a, b) =>
-                    new Date(
-                        b.Date
-                    ) -
-                    new Date(
-                        a.Date
-                    )
-            );
-
-            break;
-
-
-        case "date-asc":
-
-            filtered.sort(
-                (a, b) =>
-                    new Date(
-                        a.Date
-                    ) -
-                    new Date(
-                        b.Date
-                    )
-            );
-
-            break;
-
-
-        case "doc-asc":
-
-            filtered.sort(
-                (a, b) =>
-                    String(
-                        a.DocNo ||
-                        ""
-                    )
-                    .localeCompare(
-                        String(
-                            b.DocNo || ""
-                        )
-                    )
-            );
-
-            break;
-
-
-        case "doc-desc":
-
-            filtered.sort(
-                (a, b) =>
-                    String(
-                        b.DocNo || ""
-                    )
-                    .localeCompare(
-                        String(
-                            a.DocNo || ""
-                        )
-                    )
-            );
-
-            break;
-
-
-        case "title-asc":
-
-            filtered.sort(
-                (a, b) =>
-                    String(
-                        a.Title ||
-                        ""
-                    )
-                    .localeCompare(
-                        String(
-                            b.Title ||
-                            ""
-                        )
-                    )
-            );
-
-            break;
-
-
-        case "title-desc":
-
-            filtered.sort(
-                (a, b) =>
-                    String(
-                        b.Title ||
-                        ""
-                    )
-                    .localeCompare(
-                        String(
-                            a.Title ||
-                            ""
-                        )
-                    )
-            );
-
-            break;
-
-
-        case "dueDate-asc":
-
-            filtered.sort(
-                (a, b) =>
-                    new Date(
-                        a.DueDate
-                    ) -
-                    new Date(
-                        b.DueDate
-                    )
-            );
-
-            break;
-
-    }
-
-
-    displayDocuments(
-        filtered
+    updateRecordCount(
+        list.length
     );
 
 }
 
 
-// ==========================================
-// EVENT LISTENERS
-// ==========================================
-
-if (search) {
-
-    search.addEventListener(
-        "keyup",
-        filterDocuments
-    );
-
-}
-
-
-if (status) {
-
-    status.addEventListener(
-        "change",
-        filterDocuments
-    );
-
-}
-
-
-if (category) {
-
-    category.addEventListener(
-        "change",
-        filterDocuments
-    );
-
-}
-
-
-if (trade) {
-
-    trade.addEventListener(
-        "change",
-        filterDocuments
-    );
-
-}
-
-
-if (sort) {
-
-    sort.addEventListener(
-        "change",
-        filterDocuments
-    );
-
-}
-
-
-// ==========================================
-// DATE FORMAT
-// ==========================================
-
-function formatDate(
-    value
-) {
-
-    if (!value) {
-
-        return "—";
-
-    }
-
-
-    const date =
-        new Date(
-            value
-        );
-
-
-    if (
-        isNaN(
-            date.getTime()
-        )
-    ) {
-
-        return escapeHTML(
-            value
-        );
-
-    }
-
-
-    return date.toLocaleDateString(
-        "en-PH",
-        {
-            year: "numeric",
-            month: "short",
-            day: "2-digit"
-        }
-    );
-
-}
-
-
-// ==========================================
-// ESCAPE HTML
-// ==========================================
-
-function escapeHTML(
-    value
-) {
-
-    if (
-        value === undefined ||
-        value === null
-    ) {
-
-        return "";
-
-    }
-
-
-    return String(value)
-
-        .replace(
-            /&/g,
-            "&amp;"
-        )
-
-        .replace(
-            /</g,
-            "&lt;"
-        )
-
-        .replace(
-            />/g,
-            "&gt;"
-        )
-
-        .replace(
-            /"/g,
-            "&quot;"
-        )
-
-        .replace(
-            /'/g,
-            "&#039;"
-        );
-
-}
-
-
-// ==========================================
-// START
-// ==========================================
-
-// ==========================================
-// UPLOAD DOCUMENT
-// ==========================================
-
-const openUploadBtn =
-    document.getElementById("openUploadBtn");
-
-const closeUploadBtn =
-    document.getElementById("closeUploadBtn");
-
-const cancelUploadBtn =
-    document.getElementById("cancelUploadBtn");
-
-const uploadModal =
-    document.getElementById("uploadModal");
-
-const uploadForm =
-    document.getElementById("uploadForm");
-
-const uploadFile =
-    document.getElementById("uploadFile");
-
-const uploadFileInfo =
-    document.getElementById("uploadFileInfo");
-
-const uploadMessage =
-    document.getElementById("uploadMessage");
-
-const submitUploadBtn =
-    document.getElementById("submitUploadBtn");
-
-const uploadProject =
-    document.getElementById("uploadProject");
-
-
-// ==========================================
-// OPEN UPLOAD MODAL
-// ==========================================
-
-if (openUploadBtn) {
-
-    openUploadBtn.addEventListener(
-        "click",
-        function () {
-
-            if (!uploadModal) {
-                return;
-            }
-
-            // Set current project automatically
-            if (uploadProject) {
-
-                uploadProject.value =
-                    projectNames[project] ||
-                    project ||
-                    "";
-
-            }
-
-            // Clear previous message
-            if (uploadMessage) {
-
-                uploadMessage.textContent = "";
-
-                uploadMessage.className =
-                    "upload-message";
-
-            }
-
-            uploadModal.classList.add("show");
-
-        }
-    );
-
-}
-
-
-// ==========================================
-// CLOSE UPLOAD MODAL
-// ==========================================
-
-function closeUploadModal() {
-
-    if (!uploadModal) {
-        return;
-    }
-
-    uploadModal.classList.remove("show");
-
-}
-
-
-// ==========================================
-// CLOSE BUTTON
-// ==========================================
-
-if (closeUploadBtn) {
-
-    closeUploadBtn.addEventListener(
-        "click",
-        closeUploadModal
-    );
-
-}
-
-
-// ==========================================
-// CANCEL BUTTON
-// ==========================================
-
-if (cancelUploadBtn) {
-
-    cancelUploadBtn.addEventListener(
-        "click",
-        closeUploadModal
-    );
-
-}
-
-
-// ==========================================
-// CLOSE WHEN CLICKING OUTSIDE MODAL
-// ==========================================
-
-if (uploadModal) {
-
-    uploadModal.addEventListener(
-        "click",
-        function (event) {
-
-            if (
-                event.target ===
-                uploadModal
-            ) {
-
-                closeUploadModal();
-
-            }
-
-        }
-    );
-
-}
-
-
-// ==========================================
-// ESC KEY CLOSE
-// ==========================================
-
-document.addEventListener(
-    "keydown",
-    function (event) {
-
-        if (
-            event.key === "Escape" &&
-            uploadModal &&
-            uploadModal.classList.contains("show")
-        ) {
-
-            closeUploadModal();
-
-        }
-
-    }
-);
-
-
-// ==========================================
-// FILE INFORMATION
-// ==========================================
-
-if (uploadFile) {
-
-    uploadFile.addEventListener(
-        "change",
-        function () {
-
-            if (!uploadFile.files.length) {
-
-                uploadFileInfo.textContent =
-                    "Select the document to upload.";
-
-                return;
-
-            }
-
-            const file =
-                uploadFile.files[0];
-
-            const sizeMB =
-                (
-                    file.size /
-                    (1024 * 1024)
-                ).toFixed(2);
-
-            uploadFileInfo.textContent =
-                file.name +
-                " (" +
-                sizeMB +
-                " MB)";
-
-        }
-    );
-
-}
-
-
-// ==========================================
-// FILE TO BASE64
-// ==========================================
-
-function fileToBase64(file) {
-
-    return new Promise(
-        function (resolve, reject) {
-
-            const reader =
-                new FileReader();
-
-            reader.onload = function () {
-
-                const result =
-                    reader.result;
-
-                // Remove:
-                // data:application/pdf;base64,
-                // data:image/png;base64,
-                // etc.
-
-                const base64 =
-                    result.split(",")[1];
-
-                resolve(base64);
-
-            };
-
-            reader.onerror = function () {
-
-                reject(
-                    new Error(
-                        "Unable to read selected file."
-                    )
-                );
-
-            };
-
-            reader.readAsDataURL(file);
-
-        }
-    );
-
-}
-
-
-// ==========================================
-// SHOW UPLOAD MESSAGE
-// ==========================================
-
-function showUploadMessage(
+// ============================================================
+// TABLE MESSAGE
+// ============================================================
+
+function displayTableMessage(
     message,
-    type
+    color
 ) {
 
-    if (!uploadMessage) {
+    if (!tableBody) {
         return;
     }
 
-    uploadMessage.textContent =
-        message;
 
-    uploadMessage.className =
-        "upload-message " +
-        type;
+    tableBody.replaceChildren();
 
-}
 
+    const row =
+        document.createElement(
+            "tr"
+        );
 
-// ==========================================
-// UPLOAD FORM SUBMISSION
-// ==========================================
 
-if (uploadForm) {
+    const cell =
+        document.createElement(
+            "td"
+        );
 
-    uploadForm.addEventListener(
-        "submit",
-        async function (event) {
 
-            event.preventDefault();
+    // The current document table has ten columns.
+    cell.colSpan = 10;
 
 
-            // ----------------------------------
-            // CHECK FILE
-            // ----------------------------------
+    cell.style.textAlign =
+        "center";
 
-            if (
-                !uploadFile ||
-                !uploadFile.files.length
-            ) {
 
-                showUploadMessage(
-                    "Please select a document file.",
-                    "error"
-                );
+    cell.style.padding =
+        "25px";
 
-                return;
 
-            }
+    if (color) {
 
+        cell.style.color =
+            color;
 
-            const file =
-                uploadFile.files[0];
+    }
 
 
-            // ----------------------------------
-            // CHECK PROJECT
-            // ----------------------------------
+    cell.textContent =
+        safeText(message);
 
-            const currentProject =
-                project;
 
+    row.appendChild(
+        cell
+    );
 
-            if (!currentProject) {
 
-                showUploadMessage(
-                    "No project selected.",
-                    "error"
-                );
-
-                return;
-
-            }
-
-
-            // ----------------------------------
-            // CHECK CATEGORY
-            // ----------------------------------
-
-            const categoryValue =
-                document.getElementById(
-                    "uploadCategory"
-                ).value;
-
-
-            if (!categoryValue) {
-
-                showUploadMessage(
-                    "Please select a document category.",
-                    "error"
-                );
-
-                return;
-
-            }
-
-
-            // ----------------------------------
-            // DISABLE BUTTON
-            // ----------------------------------
-
-            if (submitUploadBtn) {
-
-                submitUploadBtn.disabled =
-                    true;
-
-                submitUploadBtn.textContent =
-                    "Uploading...";
-
-            }
-
-
-            showUploadMessage(
-                "Uploading document. Please wait...",
-                "success"
-            );
-
-
-            try {
-
-                // ----------------------------------
-                // CONVERT FILE TO BASE64
-                // ----------------------------------
-
-                const fileData =
-                    await fileToBase64(file);
-
-
-                // ----------------------------------
-                // COLLECT FORM DATA
-                // ----------------------------------
-
-                const data = {
-
-                    fileName:
-                        file.name,
-
-                    fileData:
-                        fileData,
-
-                    mimeType:
-                        file.type ||
-                        "application/octet-stream",
-
-                    project:
-                        currentProject,
-
-                    docNo:
-                        document.getElementById(
-                            "uploadDocNo"
-                        ).value.trim(),
-
-                    category:
-                        categoryValue,
-
-                    trade:
-                        document.getElementById(
-                            "uploadTrade"
-                        ).value,
-
-                    title:
-                        document.getElementById(
-                            "uploadTitle"
-                        ).value.trim(),
-
-                    revision:
-                        document.getElementById(
-                            "uploadRevision"
-                        ).value.trim() ||
-                        "00",
-
-                    status:
-                        document.getElementById(
-                            "uploadStatus"
-                        ).value,
-
-                    date:
-                        document.getElementById(
-                            "uploadDate"
-                        ).value,
-
-                    dueDate:
-                        document.getElementById(
-                            "uploadDueDate"
-                        ).value,
-
-                    ballInCourt:
-                        document.getElementById(
-                            "uploadBallInCourt"
-                        ).value.trim(),
-
-                    activityId:
-                        document.getElementById(
-                            "uploadActivityId"
-                        ).value.trim(),
-
-                    activityName:
-                        document.getElementById(
-                            "uploadActivityName"
-                        ).value.trim(),
-
-                    preparedBy:
-                        document.getElementById(
-                            "uploadPreparedBy"
-                        ).value.trim(),
-
-                    submittedBy:
-                        document.getElementById(
-                            "uploadSubmittedBy"
-                        ).value.trim(),
-
-                    remarks:
-                        document.getElementById(
-                            "uploadRemarks"
-                        ).value.trim(),
-
-                   uploadedBy:
-                        localStorage.getItem("username") ||
-                            "Document Controller"
-
-
-                };
-
-
-                // ----------------------------------
-                // SEND TO GOOGLE APPS SCRIPT
-                // ----------------------------------
-
-                const response =
-                    await fetch(
-                        GOOGLE_DOCUMENT_API,
-                        {
-
-                            method: "POST",
-
-                            headers: {
-                                "Content-Type":
-                                    "text/plain;charset=utf-8"
-                            },
-
-                            body:
-                                JSON.stringify(data)
-
-                        }
-                    );
-
-
-                // ----------------------------------
-                // READ RESPONSE
-                // ----------------------------------
-
-                const result =
-                    await response.json();
-
-
-                console.log(
-                    "Upload response:",
-                    result
-                );
-
-
-                // ----------------------------------
-                // CHECK RESULT
-                // ----------------------------------
-
-                if (
-                    !result.success
-                ) {
-
-                    throw new Error(
-                        result.message ||
-                        "Upload failed."
-                    );
-
-                }
-
-
-                // ----------------------------------
-                // SUCCESS
-                // ----------------------------------
-
-                showUploadMessage(
-                    "Document uploaded successfully.",
-                    "success"
-                );
-
-
-                // ----------------------------------
-                // RESET FORM
-                // ----------------------------------
-
-                uploadForm.reset();
-
-
-                // Restore project
-                if (uploadProject) {
-
-                    uploadProject.value =
-                        projectNames[project] ||
-                        project ||
-                        "";
-
-                }
-
-
-                if (uploadFileInfo) {
-
-                    uploadFileInfo.textContent =
-                        "Select the document to upload.";
-
-                }
-
-
-                // ----------------------------------
-                // REFRESH REGISTER
-                // ----------------------------------
-
-                await loadDocuments();
-
-
-                // ----------------------------------
-                // CLOSE AFTER SHORT DELAY
-                // ----------------------------------
-
-                setTimeout(
-                    function () {
-
-                        closeUploadModal();
-
-                    },
-                    800
-                );
-
-
-            }
-            catch (error) {
-
-                console.error(
-                    "Upload error:",
-                    error
-                );
-
-
-                showUploadMessage(
-                    error.message ||
-                    "Unable to upload document.",
-                    "error"
-                );
-
-            }
-            finally {
-
-                // ----------------------------------
-                // RESTORE BUTTON
-                // ----------------------------------
-
-                if (submitUploadBtn) {
-
-                    submitUploadBtn.disabled =
-                        false;
-
-                    submitUploadBtn.textContent =
-                        "Upload Document";
-
-                }
-
-            }
-
-        }
+    tableBody.appendChild(
+        row
     );
 
 }
 
-loadDocuments();
+
+// ===================================================
