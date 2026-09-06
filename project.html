@@ -1,73 +1,202 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Submittals</title>
-<link rel="stylesheet" href="css/style.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Project</title>
+
 <style>
-/* Status badge colors */
-.status-A { background:#4CAF50; color:white; padding:4px 8px; border-radius:4px; }
-.status-ASC { background:#2196F3; color:white; padding:4px 8px; border-radius:4px; }
-.status-RR { background:#FF9800; color:white; padding:4px 8px; border-radius:4px; }
-.status-Sup { background:#757575; color:white; padding:4px 8px; border-radius:4px; }
-.status-Sub { background:#FFEB3B; color:black; padding:4px 8px; border-radius:4px; }
-.status-TR { background:#9C27B0; color:white; padding:4px 8px; border-radius:4px; }
-.status-P { background:#F44336; color:white; padding:4px 8px; border-radius:4px; }
+
+body{
+    margin:0;
+    font-family:Segoe UI,Arial,sans-serif;
+    background:#edf2f7;
+    color:#0f172a;
+}
+
+/* =========================
+   Header
+========================= */
+
+header{
+    background:#0f172a;
+    color:white;
+    padding:20px 30px;
+}
+
+.header-content{
+    max-width:1200px;
+    margin:auto;
+}
+
+.back-link{
+    color:#cbd5e1;
+    text-decoration:none;
+    font-size:14px;
+}
+
+.back-link:hover{
+    color:white;
+}
+
+header h1{
+    margin:12px 0 5px 0;
+}
+
+header p{
+    margin:0;
+    color:#cbd5e1;
+}
+
+/* =========================
+   Main Container
+========================= */
+
+.container{
+    max-width:1200px;
+    margin:auto;
+    padding:30px;
+}
+
+/* =========================
+   Workspace
+========================= */
+
+.workspace{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+    gap:20px;
+}
+
+/* =========================
+   Module Cards
+========================= */
+
+.module{
+    background:white;
+    border-radius:12px;
+    padding:25px;
+
+    box-shadow:0 5px 15px rgba(0,0,0,.08);
+
+    transition:
+        transform .2s ease,
+        box-shadow .2s ease;
+}
+
+.module:hover{
+    transform:translateY(-3px);
+
+    box-shadow:
+        0 8px 20px rgba(0,0,0,.12);
+}
+
+.module-icon{
+    font-size:38px;
+    margin-bottom:15px;
+}
+
+.module h2{
+    margin:0 0 10px 0;
+    color:#2563eb;
+}
+
+.module p{
+    color:#64748b;
+    line-height:1.5;
+}
+
+.module-button{
+    display:inline-block;
+
+    margin-top:15px;
+
+    padding:10px 20px;
+
+    background:#2563eb;
+    color:white;
+
+    text-decoration:none;
+
+    border-radius:6px;
+
+    font-weight:500;
+}
+
+.module-button:hover{
+    background:#1d4ed8;
+}
+
+/* =========================
+   Loading / Error
+========================= */
+
+.message{
+    background:white;
+    padding:25px;
+    border-radius:12px;
+    text-align:center;
+    color:#64748b;
+}
+
 </style>
+
 </head>
+
 <body>
 
-<div class="sidebar">
-  <img src="images/logo.png" alt="DEVEX" class="logo">
-  <ul>
-    <li><a href="dashboard.html" style="color:white;text-decoration:none;">🏠 Dashboard</a></li>
-    <li><a href="projects.html" style="color:white;text-decoration:none;">📁 Projects</a></li>
-    <li><a href="documents.html" style="color:white;text-decoration:none;">📄 Documents</a></li>
-    <li>📄 Submittals</li>
-    <li><a href="billings.html" style="color:white;text-decoration:none;">📄 Billings</a></li>
-    <li><a href="reports.html" style="color:white;text-decoration:none;">📊 Reports</a></li>
-    <li>⚙ Settings</li>
-  </ul>
+
+<!-- =========================
+     HEADER
+========================= -->
+
+<header>
+
+<div class="header-content">
+
+<a
+    href="projects.html"
+    class="back-link"
+>
+    ← Back to Projects
+</a>
+
+<h1 id="projectName">
+    Loading Project...
+</h1>
+
+<p id="projectDescription">
+    Please wait...
+</p>
+
 </div>
 
-<div class="main">
-  <div class="header">
-    <h1>Project Submittals</h1>
-    <h3>Welcome John</h3>
-  </div>
+</header>
 
-  <!-- Upload Form -->
-  <form id="uploadForm">
-    <input type="text" name="title" placeholder="Title" required>
-    <input type="text" name="description" placeholder="Description" required>
-    <input type="file" name="file" required>
-    <select name="ballInCourt">
-      <option value="Engineer">Engineer (Originator)</option>
-      <option value="DC">Document Controller (DC)</option>
-      <option value="WTA">WTA (Consultant)</option>
-    </select>
-    <button type="submit">Submit</button>
-  </form>
 
-  <!-- Submittals Table -->
-  <table>
-    <thead>
-      <tr>
-        <th>Document No</th>
-        <th>Title</th>
-        <th>Revision</th>
-        <th>Status</th>
-        <th>Ball in Court</th>
-        <th>File</th>
-      </tr>
-    </thead>
-    <tbody id="docList"></tbody>
-  </table>
+<!-- =========================
+     MAIN
+========================= -->
+
+<div class="container">
+
+<div
+    id="projectWorkspace"
+    class="workspace"
+>
+
+<!-- Workspace modules will be loaded here -->
+
 </div>
 
-<!-- Google API -->
-<script src="https://apis.google.com/js/api.js"></script>
-<script src="js/submittals.js"></script>
+</div>
+
+
+<script src="js/project.js"></script>
+
 </body>
+
 </html>
