@@ -5,18 +5,18 @@
 table{
     width:100%;
     border-collapse:collapse;
-    background:#fff;
+    background:#DDE3F3;
     box-shadow:0 4px 15px rgba(0,0,0,.08);
     border-radius:10px;
     overflow:hidden;
 }
 
 th{
-    background:#1e3a8a;
+    background:#0f172a;
     color:white;
-    padding:14px;
+    padding:12px;
     text-align:left;
-    font-size:14px;
+    font-size:12px;
 }
 
 td{
@@ -119,9 +119,30 @@ body{
 }
 
 header{
-    background:#1e3a8a;
+    background:#0f172a;
     color:white;
     padding:20px 30px;
+}
+
+.header-right{
+    display:flex;
+    align-items:center;
+    gap:15px;
+}
+
+#logoutBtn{
+    background:#dc2626;
+    color:#fff;
+    border:none;
+    padding:10px 18px;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:15px;
+    transition:.3s;
+}
+
+#logoutBtn:hover{
+    background:#b91c1c;
 }
 
 .container{
@@ -159,6 +180,12 @@ table{
    DASHBOARD
 =========================== */
 
+.logo {
+    width: 100px;
+    height: auto;
+    display: block;
+    margin: 0 auto 20px auto;
+}
 .dashboard{
 
     display:grid;
