@@ -50,11 +50,14 @@ const tableBody =
 
 const projectNames = {
 
-    "syc-subway-project":
-        "SYC Subway Project",
+    "22-storey-multipurpose-building":
+        "Multipurpose Building",
 
-     "ortigas-project":
-        "Ortigas Project"
+     "government-center":
+        "Government Center",
+
+     "school-cluster3":
+         "School Cluster 3"
 };
 
 
