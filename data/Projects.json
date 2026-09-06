@@ -1,16 +1,20 @@
 [
-  {
-    "id":"government-center",
-    "name":"Government Center Project",
-    "client":"City Government of San Juan",
-    "projectNo":"GC-001",
-    "logo":"images/govcenter.png"
-  },
-  {
-    "id":"multipurpose-building",
-    "name":"22-Storey Multipurpose Building",
-    "client":"DPWH",
-    "projectNo":"MPB-001",
-    "logo":"images/mpb.png"
-  }
+     {
+        "id": "22-storey-multipurpose-building",
+        "name": "Multipurpose Building",
+        "description": "Housing Project",
+        "icon": "🏢"
+    },
+    {
+        "id": "government-center",
+        "name": "Government Center",
+        "description": "San Juan City Government Center Project",
+        "icon": "🏢"
+    },
+    {
+        "id": "school-cluster3",
+        "name": "School Cluster 3",
+        "description": "Schools Cluster Construction",
+        "icon": "🏫"
+    }
 ]
