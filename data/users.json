@@ -1,0 +1,67 @@
+[
+  {
+    "id": 1,
+    "username": "admin",
+    "password": "admin123",
+    "name": "Administrator",
+    "position": "Administrator",
+    "email": "john@devex.com",
+    "role": "Document Controller",
+    "projects": [
+      "government-center",
+      "medical-center",
+      "school-cluster3",
+      "22-storey-multipurpose-building",
+      "evacuation-center",
+      "crematorium"
+    ],
+    "active": true
+  },
+
+  {
+    "id": 2,
+    "username": "jimrose",
+    "password": "123456",
+    "name": "Engr. Jimrose Beltran",
+    "position": "QA/QC Engineer",
+    "email": "jimrose@devex.com",
+    "role": "Engineer",
+    "projects": [
+      "medical-center",
+      "government-center"
+    ],
+    "active": true
+  },
+  {
+    "id": 3,
+    "username": "tyrone",
+    "password": "Manager123",
+    "name": "Tyrone",
+    "position": "Manager",
+    "email": "tyronedhantomalon@devexinc.com",
+    "role": "Document Control Manager",
+    "projects": [
+      "government-center",
+      "medical-center",
+      "school-cluster3",
+      "22-storey-multipurpose-building",
+      "evacuation-center",
+      "crematorium"
+    ],
+    "active": true
+  },
+
+  {
+    "id": 4,
+    "username": "wta",
+    "password": "123456",
+    "name": "WTA",
+    "position": "Reviewer",
+    "email": "wta@consultant.com",
+    "role": "Reviewer",
+    "projects": [
+      "medical-center"
+    ],
+    "active": true
+  }
+]
