@@ -1,5 +1,5 @@
 // ============================================================
-// SYC DOCUMENT PORTAL
+// DEVEX DOCUMENT PORTAL
 // DASHBOARD.JS
 // Google Spreadsheet / Apps Script API Version
 // ============================================================
@@ -71,14 +71,14 @@ let allDocs = [];
 
 const projectNames = {
 
-    "ortigas-project":
-        "Ortigas Project",
+    "22-storey-multipurpose-building":
+        "Multipurpose Building",
 
-    "syc-subway-project":
-        "SYC Subway Project",
+    "government-center":
+        "Government Center",
 
-    "metro-manila-subway-project-phase-1":
-        "Metro Manila Subway Project"
+    "school-cluster3":
+        "School Cluster 3"
 
 };
 
