@@ -1,337 +1,1310 @@
-<!DOCTYPE html>
-<html lang="en">
+// ============================================================
+// SYC DOCUMENT PORTAL
+// DASHBOARD.JS
+// Google Spreadsheet / Apps Script API Version
+// ============================================================
 
-<head>
 
-<meta charset="UTF-8">
+// ============================================================
+// CURRENT USER
+// ============================================================
 
-<meta name="viewport" content="width=device-width, initial-scale=1">
+const currentUser = JSON.parse(
+    localStorage.getItem("currentUser")
+);
 
-<title>Dashboard</title>
 
-<style>
+if (currentUser) {
 
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:Segoe UI,Arial,sans-serif;
-}
+    const welcomeUser =
+        document.getElementById("welcomeUser");
 
-body{
-display:flex;
-background:#edf2f7;
-}
+    if (welcomeUser) {
 
-/* Sidebar */
+        welcomeUser.textContent =
+            `Welcome, ${currentUser.fullname}`;
 
-.sidebar{
-
-width:240px;
-height:140vh;
-background:#0f172a;
-color:white;
-padding:20px;
+    }
 
 }
 
-.sidebar h2{
 
-margin-bottom:40px;
-text-align:center;
-font-size:18px;
+// ============================================================
+// GOOGLE APPS SCRIPT API
+// ============================================================
+//
+// Replace this URL with your deployed Google Apps Script
+// Web App URL.
+//
+// Example:
+// https://script.google.com/macros/s/XXXXXXXXXXXX/exec
+//
+// ============================================================
 
-}
+const API_URL =
+    "https://script.google.com/macros/s/AKfycbxJy2DjQET7xkMEP2w_scuZ3m-5upCLprCYbxxr0Xt9ijrZzQDrShN7NiPucUjNqQPXgw/exec";
 
-.sidebar ul{
 
-list-style:none;
+// ============================================================
+// GLOBAL DOCUMENT ARRAY
+// ============================================================
+//
+// All documents retrieved from Google Spreadsheet
+// will be stored here.
+//
+// ============================================================
 
-}
+let allDocs = [];
 
-.sidebar li{
 
-padding:15px;
-margin-bottom:10px;
-cursor:pointer;
-border-radius:8px;
+// ============================================================
+// PROJECT NAME MAP
+// ============================================================
+//
+// This converts project IDs stored in the spreadsheet
+// into friendly project names.
+//
+// If your spreadsheet already contains the friendly
+// project name, the value will simply be used as-is.
+//
+// ============================================================
 
-}
+const projectNames = {
 
-.sidebar li:hover{
+    "ortigas-project":
+        "Ortigas Project",
 
-background:#1e293b;
+    "syc-subway-project":
+        "SYC Subway Project",
 
-}
+    "metro-manila-subway-project-phase-1":
+        "Metro Manila Subway Project"
 
-/* Main */
+};
 
-.main{
 
-flex:1;
-padding:30px;
+// ============================================================
+// NORMALIZE PROJECT NAME
+// ============================================================
 
-}
+function normalizeProjectName(project) {
 
-/* Header */
+    if (!project) {
+        return "";
+    }
 
-.header{
+    const projectKey =
+        String(project).trim();
 
-display:flex;
-justify-content:space-between;
-align-items:center;
-margin-bottom:30px;
-
-}
-
-.header h1{
-
-color:#0f172a;
-
-}
-
-/* Cards */
-
-.cards{
-
-display:grid;
-
-grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-
-gap:20px;
-
-}
-
-.card{
-
-background:white;
-
-padding:25px;
-
-border-radius:12px;
-
-box-shadow:0 5px 15px rgba(0,0,0,.08);
+    return (
+        projectNames[projectKey] ||
+        projectKey
+    );
 
 }
 
-.card h2{
 
-font-size:40px;
+// ============================================================
+// NORMALIZE STATUS
+// ============================================================
+//
+// This makes status comparison more reliable.
+//
+// Example:
+//
+// "Approved"
+// "approved"
+// " APPROVED "
+//
+// will all be treated as "approved".
+//
+// ============================================================
 
-color:#2563eb;
+function normalizeStatus(status) {
 
-margin-bottom:10px;
-
-}
-
-.card p{
-
-color:#555;
-
-}
-
-/* Search */
-
-.search{
-
-margin-top:35px;
-
-margin-bottom:30px;
-
-}
-
-.search input{
-
-width:100%;
-
-padding:14px;
-
-font-size:16px;
-
-border-radius:8px;
-
-border:1px solid #ccc;
+    return String(status || "")
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, " ");
 
 }
 
-/* Table */
 
-table{
+// ============================================================
+// NORMALIZE DOCUMENT DATA
+// ============================================================
+//
+// Google Apps Script returns the column headers from
+// Google Spreadsheet exactly as they appear:
+//
+// DocNo
+// Category
+// Trade
+// Title
+// Revision
+// Status
+// Date
+// DueDate
+// etc.
+//
+// Your existing dashboard uses:
+//
+// doc.docNo
+// doc.category
+// doc.trade
+// doc.title
+// doc.status
+// etc.
+//
+// This function converts the Google Sheet structure
+// into the structure already used by your dashboard.
+//
+// ============================================================
 
-width:100%;
+function normalizeDocument(d) {
 
-background:white;
+    return {
 
-border-collapse:collapse;
+        docNo:
+            d.DocNo || "",
 
-border-radius:12px;
+        category:
+            d.Category || "",
 
-overflow:hidden;
+        trade:
+            d.Trade || "",
 
-box-shadow:0 5px 15px rgba(0,0,0,.08);
+        title:
+            d.Title || "",
+
+        revision:
+            d.Revision || "",
+
+        status:
+            d.Status || "",
+
+        date:
+            d.Date || "",
+
+        dueDate:
+            d.DueDate || "",
+
+        ballInCourt:
+            d.BallInCourt || "",
+
+        activityId:
+            d.ActivityID || "",
+
+        activityName:
+            d.ActivityName || "",
+
+        project:
+            normalizeProjectName(d.Project),
+
+        preparedBy:
+            d.PreparedBy || "",
+
+        submittedBy:
+            d.SubmittedBy || "",
+
+        remarks:
+            d.Remarks || "",
+
+        fileName:
+            d.FileName || "",
+
+        fileId:
+            d.FileID || "",
+
+        fileLink:
+            d.FileLink || "",
+
+        fileSize:
+            d.FileSize || "",
+
+        fileType:
+            d.FileType || "",
+
+        uploadedBy:
+            d.UploadedBy || "",
+
+        uploadedDate:
+            d.UploadedDate || "",
+
+        folder:
+            d.Folder || ""
+
+    };
 
 }
 
-th{
 
-background:#2563eb;
+// ============================================================
+// LOAD DASHBOARD
+// ============================================================
 
-color:white;
+async function loadDashboard() {
 
-padding:15px;
+    console.log(
+        "===================================="
+    );
+
+    console.log(
+        "SYC Dashboard started"
+    );
+
+    console.log(
+        "Loading documents from Google Spreadsheet..."
+    );
+
+    console.log(
+        "API:",
+        API_URL
+    );
+
+    console.log(
+        "===================================="
+    );
+
+
+    allDocs = [];
+
+
+    // --------------------------------------------------------
+    // Validate API URL
+    // --------------------------------------------------------
+
+    if (
+        !API_URL ||
+        API_URL ===
+        "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL"
+    ) {
+
+        console.error(
+            "Google Apps Script API URL has not been configured."
+        );
+
+        showDashboardError(
+            "Google Apps Script API URL has not been configured."
+        );
+
+        return;
+
+    }
+
+
+    // --------------------------------------------------------
+    // Fetch Google Apps Script API
+    // --------------------------------------------------------
+
+    try {
+
+        const response =
+            await fetch(API_URL, {
+
+                method: "GET",
+
+                cache: "no-store"
+
+            });
+
+
+        console.log(
+            "API Response Status:",
+            response.status
+        );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                `HTTP ${response.status}`
+            );
+
+        }
+
+
+        const result =
+            await response.json();
+
+
+        console.log(
+            "API Response:",
+            result
+        );
+
+
+        // ----------------------------------------------------
+        // Check API result
+        // ----------------------------------------------------
+
+        if (!result.success) {
+
+            throw new Error(
+                result.message ||
+                "Google Apps Script returned an error."
+            );
+
+        }
+
+
+        // ----------------------------------------------------
+        // Normalize documents
+        // ----------------------------------------------------
+
+        allDocs =
+            (result.documents || [])
+                .map(normalizeDocument);
+
+
+        console.log(
+            "Total Documents:",
+            allDocs.length
+        );
+
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Unable to load documents:",
+            error
+        );
+
+
+        showDashboardError(
+            "Unable to load documents from Google Spreadsheet."
+        );
+
+
+        return;
+
+    }
+
+
+    // ========================================================
+    // SORT DOCUMENTS
+    // ========================================================
+    //
+    // Newest documents first.
+    //
+    // ========================================================
+
+    allDocs.sort(
+        (a, b) => {
+
+            const dateA =
+                new Date(a.date);
+
+            const dateB =
+                new Date(b.date);
+
+
+            return (
+                dateB - dateA
+            );
+
+        }
+    );
+
+
+    // ========================================================
+    // DISPLAY RECENT DOCUMENTS
+    // ========================================================
+
+    displayDocuments(
+        allDocs.slice(0, 10)
+    );
+
+
+    // ========================================================
+    // TOTAL PROJECTS
+    // ========================================================
+
+    const uniqueProjects =
+        [
+            ...new Set(
+
+                allDocs
+
+                    .map(
+                        d => d.project
+                    )
+
+                    .filter(
+                        Boolean
+                    )
+
+            )
+        ];
+
+
+    setElementText(
+        "totalProjects",
+        uniqueProjects.length
+    );
+
+
+    // ========================================================
+    // TOTAL DOCUMENTS
+    // ========================================================
+
+    setElementText(
+        "totalDocuments",
+        allDocs.length
+    );
+
+
+    // ========================================================
+    // STATUS COUNTS
+    // ========================================================
+
+    setElementText(
+        "submitted",
+        countStatus("Submitted")
+    );
+
+
+    setElementText(
+        "approved",
+        countStatus("Approved")
+    );
+
+
+    setElementText(
+        "approvedAsCorrected",
+        countStatus("Approved As Corrected")
+    );
+
+
+    setElementText(
+        "reviseResubmit",
+        countStatus("Revise & Resubmit")
+    );
+
+
+    setElementText(
+        "draft",
+        countStatus("Draft")
+    );
+
+
+    setElementText(
+        "cancelled",
+        countStatus("Cancelled")
+    );
+
+
+    setElementText(
+        "superseded",
+        countStatus("Superseded")
+    );
+
+
+    // ========================================================
+    // DUE / OVERDUE
+    // ========================================================
+    //
+    // These are calculated automatically from DueDate.
+    //
+    // ========================================================
+
+    const dueThisWeek =
+        countDueThisWeek();
+
+
+    const overdue =
+        countOverdue();
+
+
+    setElementText(
+        "dueThisWeek",
+        dueThisWeek
+    );
+
+
+    setElementText(
+        "overdue",
+        overdue
+    );
+
+
+    console.log(
+        "Dashboard successfully loaded."
+    );
 
 }
 
-td{
 
-padding:15px;
+// ============================================================
+// SET ELEMENT TEXT
+// ============================================================
 
-border-bottom:1px solid #ddd;
+function setElementText(
+    elementId,
+    value
+) {
+
+    const element =
+        document.getElementById(
+            elementId
+        );
+
+
+    if (element) {
+
+        element.textContent =
+            value;
+
+    }
 
 }
 
-tr:hover{
 
-background:#f3f6fb;
+// ============================================================
+// COUNT STATUS
+// ============================================================
+
+function countStatus(
+    status
+) {
+
+    const target =
+        normalizeStatus(status);
+
+
+    return allDocs.filter(
+        doc =>
+            normalizeStatus(
+                doc.status
+            ) === target
+    ).length;
 
 }
 
-</style>
 
-</head>
+// ============================================================
+// GET VALID DATE
+// ============================================================
 
-<body>
+function getValidDate(
+    value
+) {
 
-<div class="sidebar">
+    if (!value) {
+        return null;
+    }
 
-<img src="images/logo.png" alt="DEVEX" class="logo">
 
-<ul>
+    const date =
+        new Date(value);
 
-<li>🏠 Dashboard</li>
 
-<li><a href="projects.html" style="color:white;text-decoration:none;">📁 Projects</a></li>
+    if (
+        Number.isNaN(
+            date.getTime()
+        )
+    ) {
 
-<li>📄 Documents</li>
+        return null;
 
-<li><a href="reports.html" style="color:white;text-decoration:none;">📊 Reports</li>   
+    }
 
-<li>
-    <a href="notifications.html"
-       style="color:white;text-decoration:none;">
-       🔔 Notifications
-    </a>
-</li>    
 
-<li>⚙ Settings</li>
-   
-</ul>
+    return date;
 
-</div>
+}
 
-<div class="main">
 
-<div class="header">
+// ============================================================
+// COUNT DUE THIS WEEK
+// ============================================================
 
-    <h1>Document Control Dashboard</h1>
+function countDueThisWeek() {
 
-    <div class="header-right">
-        <h3 id="welcomeUser"></h3>
-        <button id="logoutBtn">Logout</button>
-    </div>
+    const today =
+        new Date();
 
-</div>
 
-<div class="cards">
+    today.setHours(
+        0,
+        0,
+        0,
+        0
+    );
 
-<div class="card">
-    <h2 id="totalDocuments">0</h2>
-    <p>📁 Total Documents</p>
-</div>
 
-<div class="card">
-    <h2 id="submitted">0</h2>
-    <p>Total Submitted</p>
-</div>
+    const endOfWeek =
+        new Date(today);
 
-<div class="card">
-    <h2 id="approved">0</h2>
-    <p>Approved</p>
-</div>
 
-<div class="card">
-    <h2 id="approvedAsCorrected">0</h2>
-    <p>Approved As Corrected</p>
-</div>
+    endOfWeek.setDate(
+        today.getDate() +
+        7
+    );
 
-<div class="card">
-    <h2 id="reviseResubmit">0</h2>
-    <p>Revise &amp; Resubmit</p>
-</div>
 
-<div class="card">
-    <h2 id="draft">0</h2>
-    <p>Draft</p>
-</div>
+    endOfWeek.setHours(
+        23,
+        59,
+        59,
+        999
+    );
 
-<div class="card">
-    <h2 id="dueThisWeek">0</h2>
-    <p>Due This Week</p>
-</div>
 
-<div class="card">
-    <h2 id="overdue">0</h2>
-    <p>Overdue</p>
-</div>
+    return allDocs.filter(
+        doc => {
 
-<div class="card">
-    <h2 id="totalProjects">0</h2>
-    <p>Total Projects</p>
-</div>
+            const dueDate =
+                getValidDate(
+                    doc.dueDate
+                );
 
-<div class="card">
-    <h2 id="superseded">0</h2>
-    <p>Superseded</p>
-</div>
 
-<div class="card">
-    <h2 id="cancelled">0</h2>
-    <p>Cancelled</p>
-</div>    
+            if (!dueDate) {
+                return false;
+            }
 
-</div>
 
-<div class="search">
+            return (
+                dueDate >= today &&
+                dueDate <= endOfWeek
+            );
 
-<input type="text" 
-       id="searchInput"
-       placeholder="Search documents by number, title, project, status, trade, or category..."
+        }
+    ).length;
 
-</div>
+}
 
-<table>
 
-<thead>
-<tr>
-    <th>Document No.</th>
-    <th>Category</th>
-    <th>Project</th>
-    <th>Title</th>
-    <th>Status</th>
-    <th>Date</th>
+// ============================================================
+// COUNT OVERDUE
+// ============================================================
 
-</tr>
-</thead>
+function countOverdue() {
 
-<tbody id="dashboardTable">
-</tbody>    
+    const today =
+        new Date();
 
-</table>
 
-</div>
-    
-<script src="js/auth.js"></script>    
-<script src="js/dashboard.js"></script>
-  
-</body>
-</html>    
+    today.setHours(
+        0,
+        0,
+        0,
+        0
+    );
+
+
+    return allDocs.filter(
+        doc => {
+
+            const dueDate =
+                getValidDate(
+                    doc.dueDate
+                );
+
+
+            if (!dueDate) {
+                return false;
+            }
+
+
+            if (
+                dueDate >= today
+            ) {
+
+                return false;
+
+            }
+
+
+            const status =
+                normalizeStatus(
+                    doc.status
+                );
+
+
+            // Do not consider completed-type
+            // documents as overdue.
+
+            const completedStatuses = [
+
+                "approved",
+                "approved as corrected",
+                "cancelled",
+                "superseded",
+                "closed"
+
+            ];
+
+
+            if (
+                completedStatuses.includes(
+                    status
+                )
+            ) {
+
+                return false;
+
+            }
+
+
+            return true;
+
+        }
+    ).length;
+
+}
+
+
+// ============================================================
+// DISPLAY DOCUMENTS
+// ============================================================
+
+function displayDocuments(
+    docs
+) {
+
+    const tbody =
+        document.getElementById(
+            "dashboardTable"
+        );
+
+
+    if (!tbody) {
+
+        console.warn(
+            "dashboardTable element not found."
+        );
+
+        return;
+
+    }
+
+
+    tbody.innerHTML = "";
+
+
+    // --------------------------------------------------------
+    // No documents
+    // --------------------------------------------------------
+
+    if (
+        !docs ||
+        docs.length === 0
+    ) {
+
+        tbody.innerHTML = `
+
+            <tr>
+
+                <td
+                    colspan="6"
+                    style="text-align:center;"
+                >
+
+                    No documents found.
+
+                </td>
+
+            </tr>
+
+        `;
+
+        return;
+
+    }
+
+
+    // --------------------------------------------------------
+    // Display documents
+    // --------------------------------------------------------
+
+    docs.forEach(
+        doc => {
+
+            const formattedDate =
+                formatDate(
+                    doc.date
+                );
+
+
+            const row =
+                document.createElement(
+                    "tr"
+                );
+
+
+            row.innerHTML = `
+
+                <td>
+                    ${escapeHTML(
+                        doc.docNo
+                    )}
+                </td>
+
+                <td>
+                    ${escapeHTML(
+                        doc.category
+                    )}
+                </td>
+
+                <td>
+                    ${escapeHTML(
+                        doc.project
+                    )}
+                </td>
+
+                <td>
+                    ${escapeHTML(
+                        doc.title
+                    )}
+                </td>
+
+                <td>
+                    ${escapeHTML(
+                        doc.status
+                    )}
+                </td>
+
+                <td>
+                    ${formattedDate}
+                </td>
+
+            `;
+
+
+            tbody.appendChild(
+                row
+            );
+
+        }
+    );
+
+}
+
+
+// ============================================================
+// FORMAT DATE
+// ============================================================
+
+function formatDate(
+    value
+) {
+
+    if (!value) {
+        return "";
+    }
+
+
+    const date =
+        getValidDate(
+            value
+        );
+
+
+    if (!date) {
+        return "";
+    }
+
+
+    return date.toLocaleDateString(
+        "en-US",
+        {
+
+            year: "numeric",
+
+            month: "short",
+
+            day: "numeric"
+
+        }
+    );
+
+}
+
+
+// ============================================================
+// ESCAPE HTML
+// ============================================================
+//
+// Prevents document information containing characters such
+// as < > & from being interpreted as HTML.
+//
+// ============================================================
+
+function escapeHTML(
+    value
+) {
+
+    if (
+        value === null ||
+        value === undefined
+    ) {
+
+        return "";
+
+    }
+
+
+    return String(value)
+
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+
+        .replace(
+            /</g,
+            "&lt;"
+        )
+
+        .replace(
+            />/g,
+            "&gt;"
+        )
+
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+
+}
+
+
+// ============================================================
+// SHOW DASHBOARD ERROR
+// ============================================================
+
+function showDashboardError(
+    message
+) {
+
+    const tbody =
+        document.getElementById(
+            "dashboardTable"
+        );
+
+
+    if (!tbody) {
+        return;
+    }
+
+
+    tbody.innerHTML = `
+
+        <tr>
+
+            <td
+                colspan="6"
+                style="
+                    text-align:center;
+                    padding:20px;
+                "
+            >
+
+                ${escapeHTML(
+                    message
+                )}
+
+            </td>
+
+        </tr>
+
+    `;
+
+
+    // Reset dashboard counters
+
+    setElementText(
+        "totalProjects",
+        0
+    );
+
+
+    setElementText(
+        "totalDocuments",
+        0
+    );
+
+
+    setElementText(
+        "submitted",
+        0
+    );
+
+
+    setElementText(
+        "approved",
+        0
+    );
+
+
+    setElementText(
+        "approvedAsCorrected",
+        0
+    );
+
+
+    setElementText(
+        "reviseResubmit",
+        0
+    );
+
+
+    setElementText(
+        "draft",
+        0
+    );
+
+
+    setElementText(
+        "cancelled",
+        0
+    );
+
+
+    setElementText(
+        "superseded",
+        0
+    );
+
+
+    setElementText(
+        "dueThisWeek",
+        0
+    );
+
+
+    setElementText(
+        "overdue",
+        0
+    );
+
+}
+
+
+// ============================================================
+// SEARCH
+// ============================================================
+
+const searchInput =
+    document.getElementById(
+        "searchInput"
+    );
+
+
+if (searchInput) {
+
+    searchInput.addEventListener(
+        "input",
+        function () {
+
+            const searchTerm =
+                this.value
+                    .trim()
+                    .toLowerCase();
+
+
+            // ------------------------------------------------
+            // Empty search
+            // ------------------------------------------------
+
+            if (!searchTerm) {
+
+                displayDocuments(
+                    allDocs.slice(0, 10)
+                );
+
+                return;
+
+            }
+
+
+            // ------------------------------------------------
+            // Search
+            // ------------------------------------------------
+
+            const results =
+                allDocs.filter(
+                    doc => {
+
+                        return (
+
+                            String(
+                                doc.docNo || ""
+                            )
+                                .toLowerCase()
+                                .includes(
+                                    searchTerm
+                                )
+
+                            ||
+
+                            String(
+                                doc.title || ""
+                            )
+                                .toLowerCase()
+                                .includes(
+                                    searchTerm
+                                )
+
+                            ||
+
+                            String(
+                                doc.project || ""
+                            )
+                                .toLowerCase()
+                                .includes(
+                                    searchTerm
+                                )
+
+                            ||
+
+                            String(
+                                doc.status || ""
+                            )
+                                .toLowerCase()
+                                .includes(
+                                    searchTerm
+                                )
+
+                            ||
+
+                            String(
+                                doc.trade || ""
+                            )
+                                .toLowerCase()
+                                .includes(
+                                    searchTerm
+                                )
+
+                            ||
+
+                            String(
+                                doc.category || ""
+                            )
+                                .toLowerCase()
+                                .includes(
+                                    searchTerm
+                                )
+
+                            ||
+
+                            String(
+                                doc.revision || ""
+                            )
+                                .toLowerCase()
+                                .includes(
+                                    searchTerm
+                                )
+
+                            ||
+
+                            String(
+                                doc.ballInCourt || ""
+                            )
+                                .toLowerCase()
+                                .includes(
+                                    searchTerm
+                                )
+
+                            ||
+
+                            String(
+                                doc.activityId || ""
+                            )
+                                .toLowerCase()
+                                .includes(
+                                    searchTerm
+                                )
+
+                            ||
+
+                            String(
+                                doc.activityName || ""
+                            )
+                                .toLowerCase()
+                                .includes(
+                                    searchTerm
+                                )
+
+                            ||
+
+                            String(
+                                doc.preparedBy || ""
+                            )
+                                .toLowerCase()
+                                .includes(
+                                    searchTerm
+                                )
+
+                            ||
+
+                            String(
+                                doc.submittedBy || ""
+                            )
+                                .toLowerCase()
+                                .includes(
+                                    searchTerm
+                                )
+
+                            ||
+
+                            String(
+                                doc.fileName || ""
+                            )
+                                .toLowerCase()
+                                .includes(
+                                    searchTerm
+                                )
+
+                            ||
+
+                            String(
+                                doc.uploadedBy || ""
+                            )
+                                .toLowerCase()
+                                .includes(
+                                    searchTerm
+                                )
+
+                        );
+
+                    }
+                );
+
+
+            console.log(
+                "Search:",
+                searchTerm
+            );
+
+
+            console.log(
+                "Results:",
+                results.length
+            );
+
+
+            displayDocuments(
+                results
+            );
+
+        }
+    );
+
+}
+
+
+// ============================================================
+// START DASHBOARD
+// ============================================================
+
+loadDashboard();
