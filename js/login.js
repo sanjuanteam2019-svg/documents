@@ -34,6 +34,12 @@ const users = [
         password: "12345",
         fullname: "Tyrone Dhan Tomalon",
         role: "Documentation Manager"
+    },
+    {
+        username: "Loy",
+        password: "12345",
+        fullname: "Arlou Isidro",
+        role: "Document Controller"
     }
 ];
 
