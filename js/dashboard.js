@@ -414,7 +414,7 @@ async function loadDashboard() {
     // ========================================================
 
     displayDocuments(
-        allDocs.slice(0, 10)
+        allDocs.slice(0, 20)
     );
 
 
