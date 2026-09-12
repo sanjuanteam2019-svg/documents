@@ -762,9 +762,7 @@ function countOverdue() {
 // DISPLAY DOCUMENTS
 // ============================================================
 
-function displayDocuments(
-    docs
-) {
+function displayDocuments(docs) {
 
     const tbody =
         document.getElementById(
@@ -800,8 +798,11 @@ function displayDocuments(
             <tr>
 
                 <td
-                    colspan="6"
-                    style="text-align:center;"
+                    colspan="7"
+                    style="
+                        text-align:center;
+                        padding:20px;
+                    "
                 >
 
                     No documents found.
@@ -835,6 +836,53 @@ function displayDocuments(
                     "tr"
                 );
 
+
+            // ------------------------------------------------
+            // FILE LINK
+            // ------------------------------------------------
+
+            let fileLinkHTML = "";
+
+
+            if (doc.fileLink) {
+
+                fileLinkHTML = `
+
+                    <a
+                        href="${escapeHTML(doc.fileLink)}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style="
+                            color:#2563eb;
+                            text-decoration:none;
+                            font-weight:600;
+                        "
+                    >
+                        📄 View File
+                    </a>
+
+                `;
+
+            } else {
+
+                fileLinkHTML = `
+
+                    <span
+                        style="
+                            color:#999;
+                        "
+                    >
+                        No File
+                    </span>
+
+                `;
+
+            }
+
+
+            // ------------------------------------------------
+            // TABLE ROW
+            // ------------------------------------------------
 
             row.innerHTML = `
 
@@ -872,6 +920,10 @@ function displayDocuments(
                     ${formattedDate}
                 </td>
 
+                <td>
+                    ${fileLinkHTML}
+                </td>
+
             `;
 
 
@@ -883,7 +935,6 @@ function displayDocuments(
     );
 
 }
-
 
 // ============================================================
 // FORMAT DATE
@@ -1002,7 +1053,7 @@ function showDashboardError(
         <tr>
 
             <td
-                colspan="6"
+                colspan="7"
                 style="
                     text-align:center;
                     padding:20px;
