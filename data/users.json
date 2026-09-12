@@ -64,4 +64,19 @@
     ],
     "active": true
   }
+  {
+    "id": 5,
+    "username": "Loy",
+    "password": "12345",
+    "name": "Arlou Isidro",
+    "position": "Document Controller",
+    "email": "arlouisidro@devexsolutions.com",
+    "role": "Document Controller",
+    "projects": [
+      "government-center",
+      "22-storey-multipurpose-building",
+      "school-cluster3"
+    ],
+    "active": true
+  }
 ]
